@@ -6,7 +6,7 @@ type: software
 title: "Circuit Topology Shapes the Mapping between Excitatory-Inhibitory Input Composition and Aperiodic Spectral Slope"
 version: 1.0.0
 date-released: 2026-08-26
-repository-code: "https://github.com/Ziliangtju/circuit-topology-aperiodic-slope"
+repository-code: "https://github.com/MultiscaleNeuroDynamics/circuit-topology-aperiodic-slope"
 license: MIT
 authors:
   - family-names: "Cai"
