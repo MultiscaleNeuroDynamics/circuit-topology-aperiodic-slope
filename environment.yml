@@ -1,0 +1,24 @@
+name: circuit-topology-aperiodic
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip>=24
+  - numpy=1.26.*
+  - pandas=2.2.*
+  - scipy=1.13.*
+  - matplotlib=3.8.*
+  - statsmodels=0.14.*
+  - scikit-learn=1.5.*
+  - networkx=3.3.*
+  - mne=1.7.*
+  - psutil=5.9.*
+  - tqdm=4.66.*
+  - h5py=3.11.*
+  - cython=3.0.*
+  - openmpi=4.1.*
+  - pip:
+      - neuron==8.2.6
+      - LFPy==2.3.5
+      - fooof==1.1.1
+      - standard-transform==1.4.1

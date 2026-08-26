@@ -1,0 +1,37 @@
+{
+  "_comments": {
+    "synapse_parameters": "weight 单位 mS，tau 单位 ms，e 单位 mV。",
+    "passive_membrane": "Ra 单位 Ohm*cm；g_leak 单位 S/cm^2；erev_leak 为被动漏电反转电位。"
+  },
+
+  "tmax": 12000,
+  "dt": 1.0,
+  "eSynParams": {
+    "idx": 0,
+    "e": 0.0,
+    "syntype": "Exp2Syn",
+    "tau1": 0.3,
+    "tau2": 1.8,
+    "weight": 0.0007,
+    "record_current": true
+  },
+
+  "iSynParams": {
+    "idx": 0,
+    "e": -80.0,
+    "syntype": "Exp2Syn",
+    "tau1": 1.0,
+    "tau2": 10.0,
+    "weight": 0.0007,
+    "record_current": true
+  },
+
+  "biophys_pars": {
+    "activeSoma": false,
+    "pas_mem_pars": {
+      "Ra": 100.0,
+      "erev_leak": -58.5,
+      "g_leak": 0.0011
+    }
+  }
+}

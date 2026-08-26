@@ -1,0 +1,15 @@
+patch_x: [550.0, 800.0]
+patch_z: [750.0, 1100.0]
+N_patch_cells: 1738
+N_E: 1324
+N_I: 385
+EE_edges: 38935
+EI_edges: 37249
+IE_edges: 66246
+sum_EE: 46432
+sum_EI: 58732
+sum_IE: 173430
+syn_patch_total: 333524
+syn_ee_n: 46432
+syn_ei_n: 58732
+syn_ie_n: 173430

@@ -1,0 +1,24 @@
+# Generated simulations and analyses
+work/
+outputs/
+
+# External raw data are downloaded separately
+data/external/ds003380/
+
+# Compiled NEURON mechanisms
+mechanisms/x86_64/
+mechanisms/arm64/
+mechanisms/nrnmech.dll
+mechanisms/*.o
+mechanisms/*.c
+mechanisms/*.cpp
+mechanisms/special*
+
+# Python and editor artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
