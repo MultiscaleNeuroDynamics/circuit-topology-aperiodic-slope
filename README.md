@@ -188,4 +188,5 @@ The source code in this repository is released under the MIT License; see
 and any locally downloaded OpenNeuro recordings retain their original licenses
 and terms of use and are not relicensed by the software license.
 
-Formal citation information will be added upon publication.
+Repository-level citation metadata are provided in `CITATION.cff`. The formal
+article DOI and journal citation will be added upon publication.
