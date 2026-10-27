@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Extract aperiodic and adaptive-Ising features from OpenNeuro ds003380.
+"""从OpenNeuro ds003380提取非周期和自适应Ising特征。执行信号及FOOOF质控，估计状态层面的自适应Ising协变量，并创建动物层面丙泊酚分析所用的时间段与通道表。 / Extract aperiodic and adaptive-Ising features from OpenNeuro ds003380.
 
 The script performs signal and FOOOF quality control, estimates state-level
 adaptive-Ising covariates, and creates the epoch/channel table used by the
@@ -48,7 +48,7 @@ except Exception as e:
 
 
 # ============================================================
-# Paths and configuration.
+# 路径与配置。 / Paths and configuration.
 # ============================================================
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -84,12 +84,12 @@ FOOOF_MIN_PEAK_HEIGHT = 0.05
 FOOOF_PEAK_THRESHOLD = 2.0
 FOOOF_APERIODIC_MODE = "fixed"
 
-# FOOOF QC
+# FOOOF质量控制。 / FOOOF QC
 MIN_FOOOF_R2 = 0.80
 MAX_FOOOF_ERROR = 0.25
 EXPONENT_RANGE = (-2.0, 6.0)
 
-# Adaptive-Ising inference from alpha-band ACF
+# 根据alpha频带自相关函数进行自适应Ising推断。 / Adaptive-Ising inference from alpha-band ACF
 ISING_ALPHA_BAND = (8.0, 13.0)
 ISING_ACF_MAX_LAG_SEC = 0.50
 ISING_FIT_START_LAG_SEC = 0.0
@@ -99,19 +99,19 @@ ISING_BETA_BOUNDS = (0.50, 0.9999)
 ISING_C_BOUNDS = (1e-6, 1.0)
 ISING_MIN_R2 = 0.50
 
-# Full-state signal QC before adaptive-Ising ACF fitting.
-# Purpose: remove/flag channels whose raw waveform is too small or whose
-# broadband power is too low, because alpha-band ACF fitting standardizes the
-# signal and would otherwise allow very low-amplitude channels to enter the fit.
+# 自适应Ising自相关拟合前执行全状态信号质控。 / Full-state signal QC before adaptive-Ising ACF fitting.
+# 目的：去除或标记原始波形振幅过小或 / Purpose: remove/flag channels whose raw waveform is too small or whose
+# 宽带功率过低的通道，因为alpha频带自相关拟合会标准化 / broadband power is too low, because alpha-band ACF fitting standardizes the
+# 信号，否则极低振幅通道也会进入拟合。 / signal and would otherwise allow very low-amplitude channels to enter the fit.
 ISING_SIGNAL_QC_MIN_FULL_SEC = 30.0
 ISING_SIGNAL_QC_MIN_STD = 1e-12
 ISING_SIGNAL_QC_MIN_RMS = 1e-12
 ISING_SIGNAL_QC_MIN_LOG_TOTAL_POWER_1_100 = -30.0
 ISING_SIGNAL_QC_MIN_MEDIAN_LOG10_PSD_1_90 = -30.0
 
-# Additional data-driven low-power exclusion within state × region.
-# This catches channels that are technically nonzero but are extreme low-power
-# outliers relative to the same region/state. Set to 0 to disable.
+# 在状态与区域组合内额外实施数据驱动的低功率排除。 / Additional data-driven low-power exclusion within state × region.
+# 捕获技术上非零、但相对同一区域和状态而言功率极低的 / This catches channels that are technically nonzero but are extreme low-power
+# 离群通道；设为0可禁用。 / outliers relative to the same region/state. Set to 0 to disable.
 ISING_SIGNAL_QC_LOW_QUANTILE = 0.02
 ISING_SIGNAL_QC_MIN_GROUP_N_FOR_QUANTILE = 8
 
@@ -122,13 +122,13 @@ PHYS_CH = {
     4: "CVP",
     5: "ICP",
 }
-CORTEX_CH = list(range(6, 15))   # Chan 6–14
-THALAMUS_CH = [15, 16]           # Chan 15–16
+CORTEX_CH = list(range(6, 15))   # 通道6至14。 / Chan 6–14
+THALAMUS_CH = [15, 16]           # 通道15至16。 / Chan 15–16
 SIGNAL_CH = CORTEX_CH + THALAMUS_CH
 
 
 # ============================================================
-# File-handling details.
+# 文件处理细节。 / File-handling details.
 # ============================================================
 
 def parse_state_from_name(fname):
@@ -162,7 +162,7 @@ def channel_region(ch_num):
 # ============================================================
 
 def maybe_resample(data, fs, target_fs):
-    """
+    """数据维度：通道数乘以时间点数。 / 
     data: n_channels × n_times
     """
     if fs <= target_fs * 1.05:
@@ -229,7 +229,7 @@ def bandpass_sos(x, fs, lo, hi, order=4):
 
 
 def autocorr_fft_norm(x, max_lag_samples):
-    """
+    """快速、归一化的无偏自相关。 / 
     Fast normalized unbiased autocorrelation.
     """
     x = np.asarray(x, dtype=float)
@@ -261,7 +261,7 @@ def autocorr_fft_norm(x, max_lag_samples):
 
 
 # ============================================================
-# 3. FOOOF aperiodic exponent
+# 3. FOOOF非周期指数。 / 3. FOOOF aperiodic exponent
 # ============================================================
 
 def fit_fooof_fixed(freqs, psd):
@@ -377,11 +377,11 @@ def compute_epoch_features_fooof(x, fs):
 
 
 # ============================================================
-# 4. Adaptive-Ising alpha-band ACF fitting
+# 4. 自适应Ising的alpha频带自相关拟合。 / 4. Adaptive-Ising alpha-band ACF fitting
 # ============================================================
 
 def empty_adaptive_ising_output():
-    """Default adaptive-Ising output for failed/skipped fits."""
+    """拟合失败或跳过时的默认自适应Ising输出。 / Default adaptive-Ising output for failed/skipped fits."""
     return {
         "ising_beta_param": np.nan,
         "ising_c_param": np.nan,
@@ -395,7 +395,7 @@ def empty_adaptive_ising_output():
 
 
 def compute_full_state_signal_qc_for_ising(x, fs):
-    """
+    """自适应Ising拟合前执行全状态信号质控。其自相关拟合会标准化alpha频带信号并丢失振幅信息，因此在进入Ising模型前，检查未标准化的完整状态通道信号，标记近乎平坦或功率极低的记录。 / 
     Full-state signal QC before adaptive-Ising fitting.
 
     The adaptive-Ising ACF fit standardizes the alpha-band signal. Therefore,
@@ -521,7 +521,7 @@ def compute_full_state_signal_qc_for_ising(x, fs):
 
 
 def apply_state_region_low_power_qc(ising_state):
-    """
+    """向Ising状态表添加状态与区域内基于分位数的低功率质控。绝对质控捕获近乎平坦的信号，相对质控捕获同一状态和区域内功率极低的离群值。 / 
     Add state × region quantile-based low-power QC to the Ising state table.
 
     The absolute QC catches near-flat signals. This additional relative QC
@@ -536,7 +536,7 @@ def apply_state_region_low_power_qc(ising_state):
     out["ising_signal_qc_log_rms_qthr"] = np.nan
     out["ising_signal_qc_log_total_power_qthr"] = np.nan
 
-    # Start from absolute/full-state QC; quantile QC can only turn OK into False.
+    # 从绝对或全状态质控开始，分位数质控只能将通过状态改为False。 / Start from absolute/full-state QC; quantile QC can only turn OK into False.
     out["ising_signal_ok"] = out["ising_signal_ok_initial"].fillna(False).astype(bool)
     out["ising_signal_qc_reason_final"] = out["ising_signal_qc_reason"].astype(str)
 
@@ -590,7 +590,7 @@ def apply_state_region_low_power_qc(ising_state):
         & out["ising_signal_ok_quantile"].fillna(False).astype(bool)
     )
 
-    # Any record failing signal QC is treated as unusable for Ising-control models.
+    # 未通过信号质控的记录均视为不可用于Ising控制模型。 / Any record failing signal QC is treated as unusable for Ising-control models.
     out.loc[~out["ising_signal_ok"], "ising_fit_success"] = False
 
     return out
@@ -749,7 +749,7 @@ def infer_adaptive_ising_from_alpha_acf(x, fs):
 
 
 # ============================================================
-# Statistical analysis.
+# 统计分析。 / Statistical analysis.
 # ============================================================
 
 def zscore(x):
@@ -762,7 +762,7 @@ def zscore(x):
 
 
 def exact_signflip_test(diffs):
-    """
+    """动物层面的配对差：丘脑变化量减皮层变化量；计算双侧精确符号翻转p值。 / 
     animal-level paired differences:
         diff = thalamus_delta - cortex_delta
     two-sided exact sign-flip p
@@ -802,7 +802,7 @@ def fit_cluster_ols(formula, data, cluster_col="animal_id"):
 
 
 # ============================================================
-# 6. Build EDF inventory
+# 6. 构建EDF文件清单。 / 6. Build EDF inventory
 # ============================================================
 
 participants = pd.read_csv(PARTICIPANTS_TSV, sep="\t")
@@ -819,7 +819,7 @@ for p in edf_files:
     animal_from_file = parse_animal_from_name(fname)
     animal_from_participants = part_map.get(subject, {}).get("animal_id", None)
 
-    # File-handling details.
+    # 文件处理细节。 / File-handling details.
     animal_id = animal_from_file if animal_from_file is not None else animal_from_participants
     group = part_map.get(subject, {}).get("group", "")
 
@@ -853,7 +853,7 @@ print(inv_main[["subject", "animal_id", "group", "state_raw", "state_label", "ed
 
 
 # ============================================================
-# 7. Feature extraction: FOOOF epoch-level + Ising state-level
+# 7. 特征提取：时间段层面的FOOOF和状态层面的Ising。 / 7. Feature extraction: FOOOF epoch-level + Ising state-level
 # ============================================================
 
 feature_rows = []
@@ -893,7 +893,7 @@ for _, meta in tqdm(inv_main.iterrows(), total=len(inv_main), desc="EDF"):
     n_times = data.shape[1]
 
     # ------------------------------------------------------------
-    # 7.1 state-level adaptive-Ising inference on full state
+    # 7.1 对完整状态执行状态层面的自适应Ising推断。 / 7.1 state-level adaptive-Ising inference on full state
     # ------------------------------------------------------------
     for ch_num in SIGNAL_CH:
         if ch_num not in present_nums:
@@ -902,9 +902,9 @@ for _, meta in tqdm(inv_main.iterrows(), total=len(inv_main), desc="EDF"):
         idx = present_nums.index(ch_num)
         x_full = data[idx, :]
 
-        # Full-state signal QC is applied before alpha-band standardization and
-        # ACF fitting. Low-amplitude / low-power channels are not sent into the
-        # adaptive-Ising fit.
+        # 在alpha频带标准化和 / Full-state signal QC is applied before alpha-band standardization and
+        # 自相关拟合前执行全状态信号质控；低振幅或低功率通道不进入 / ACF fitting. Low-amplitude / low-power channels are not sent into the
+        # 自适应Ising拟合。 / adaptive-Ising fit.
         ising_signal_qc = compute_full_state_signal_qc_for_ising(x_full, fs2)
         if bool(ising_signal_qc.get("ising_signal_ok_initial", False)):
             ising_feats = infer_adaptive_ising_from_alpha_acf(x_full, fs2)
@@ -929,7 +929,7 @@ for _, meta in tqdm(inv_main.iterrows(), total=len(inv_main), desc="EDF"):
         ising_rows.append(row)
 
     # ------------------------------------------------------------
-    # 7.2 epoch-level FOOOF + covariates
+    # 7.2 时间段层面的FOOOF与协变量。 / 7.2 epoch-level FOOOF + covariates
     # ------------------------------------------------------------
     epoch_len = int(EPOCH_SEC * fs2)
     epoch_step = int(EPOCH_STEP_SEC * fs2)
@@ -943,7 +943,7 @@ for _, meta in tqdm(inv_main.iterrows(), total=len(inv_main), desc="EDF"):
         t0 = start / fs2
         t1 = stop / fs2
 
-        # physiology channel covariates
+        # 生理通道协变量。 / physiology channel covariates
         phys_feats = {}
         for ch_num, phys_name in PHYS_CH.items():
             if ch_num in present_nums:
@@ -992,8 +992,8 @@ for _, meta in tqdm(inv_main.iterrows(), total=len(inv_main), desc="EDF"):
 features = pd.DataFrame(feature_rows)
 ising_state = pd.DataFrame(ising_rows)
 
-# Apply state × region low-power quantile QC after all state/channel rows are available.
-# The saved Ising table therefore contains both absolute and relative signal-QC flags.
+# 获得全部状态和通道行后，执行状态与区域内的低功率分位数质控。 / Apply state × region low-power quantile QC after all state/channel rows are available.
+# 因此保存的Ising表同时包含绝对和相对信号质控标志。 / The saved Ising table therefore contains both absolute and relative signal-QC flags.
 ising_state = apply_state_region_low_power_qc(ising_state)
 
 features.to_csv(OUT_DIR / "02_epoch_channel_features_fooof_raw.csv", index=False, encoding="utf-8-sig")
@@ -1007,7 +1007,7 @@ print(f"Ising state rows = {len(ising_state)}")
 
 
 # ============================================================
-# 8. QC + merge Ising to epoch features
+# 8. 质量控制，并将Ising合并到时间段特征。 / 8. QC + merge Ising to epoch features
 # ============================================================
 
 df = features.copy()
@@ -1018,7 +1018,7 @@ df = df[df["fooof_r2"] >= MIN_FOOOF_R2].copy()
 df = df[df["fooof_error"] <= MAX_FOOOF_ERROR].copy()
 df = df[(df["fooof_exponent"] > EXPONENT_RANGE[0]) & (df["fooof_exponent"] < EXPONENT_RANGE[1])].copy()
 
-# merge state-level Ising covariates
+# 合并状态层面的Ising协变量。 / merge state-level Ising covariates
 ising_cols = [
     "subject",
     "animal_id",
@@ -1077,7 +1077,7 @@ if not ising_state.empty:
 
 
 # ============================================================
-# 9. Effective-state PCA PC1–PC3
+# 9. 有效状态PCA的PC1至PC3。 / 9. Effective-state PCA PC1–PC3
 # ============================================================
 
 score_cols = [
@@ -1127,7 +1127,7 @@ df.to_csv(OUT_DIR / "04_epoch_channel_features_fooof_QC_with_PC123_Ising.csv",
 
 
 # ============================================================
-# 10. Baseline and delta features
+# 10. 基线及变化量特征。 / 10. Baseline and delta features
 # ============================================================
 
 base_agg = {
@@ -1206,9 +1206,9 @@ for c in [
     if c in df2.columns and b in df2.columns:
         df2[f"delta_{c}_vs_fentanyl"] = df2[c] - df2[b]
 
-# Now includes full-state signal QC for both the current propofol state and
-# its fentanyl baseline. This prevents low-amplitude channels from entering
-# adaptive-Ising-control analyses through standardized ACF fits.
+# 现在同时包含当前丙泊酚状态和 / Now includes full-state signal QC for both the current propofol state and
+# 对应芬太尼基线的全状态信号质控，防止低振幅通道 / its fentanyl baseline. This prevents low-amplitude channels from entering
+# 通过标准化自相关拟合进入自适应Ising控制分析。 / adaptive-Ising-control analyses through standardized ACF fits.
 df2["ising_control_ok"] = (
     df2["ising_signal_ok"].fillna(False).astype(bool)
     & (df2["baseline_ising_signal_ok_rate"] >= 1.0)
@@ -1222,7 +1222,7 @@ df2.to_csv(OUT_DIR / "05_epoch_channel_features_fooof_with_delta_Ising.csv",
 
 
 # ============================================================
-# 11. Subject × region × state summary
+# 11. 个体、区域与状态的组合汇总。 / 11. Subject × region × state summary
 # ============================================================
 
 agg_dict = {
@@ -1285,7 +1285,7 @@ print(sub_region.to_string(index=False))
 
 
 # ============================================================
-# 12. Robustness A: animal-level sign-flip permutation
+# 12. 稳健性A：动物层面的符号翻转置换。 / 12. Robustness A: animal-level sign-flip permutation
 # ============================================================
 
 paired_rows = []
@@ -1347,7 +1347,7 @@ print(paired.to_string(index=False))
 
 
 # ============================================================
-# 13. Robustness C/D: regression controls
+# 13. 稳健性C/D：回归控制。 / 13. Robustness C/D: regression controls
 # ============================================================
 
 reg = df2[df2["state_label"].isin(["propofol_early", "propofol_late"])].copy()
@@ -1360,7 +1360,7 @@ for c in [
 ]:
     reg = reg[np.isfinite(reg[c])].copy()
 
-# z-score covariates
+# 对协变量进行z分数标准化。 / z-score covariates
 z_cols = [
     "baseline_exponent",
     "delta_offset_vs_fentanyl",
@@ -1433,7 +1433,7 @@ formulas = {
         "+ C(state_label) + z_baseline_exponent + z_delta_offset_vs_fentanyl",
 }
 
-# direct covariate model
+# 直接协变量模型。 / direct covariate model
 direct_terms = []
 for raw_c in direct_delta_cols:
     zc = f"z_{raw_c}"
@@ -1447,7 +1447,7 @@ if direct_terms:
         + " + ".join(direct_terms)
     )
 
-# adaptive-Ising controls
+# 自适应Ising控制量。 / adaptive-Ising controls
 if (
     "z_baseline_ising_beta_param" in reg.columns
     and "z_delta_ising_beta_param_vs_fentanyl" in reg.columns
@@ -1569,12 +1569,12 @@ print(key_terms.to_string(index=False))
 
 
 # ============================================================
-# 14. Figures
+# 14. 图形。 / 14. Figures
 # ============================================================
 
 plt.rcParams["font.family"] = "Arial"
 
-# paired plots
+# 配对图。 / paired plots
 for analysis_name, summary_df in [
     ("all", sub_region),
     ("sedation_only", sub_region[sub_region["group"] == "sedation"].copy()),
@@ -1613,7 +1613,7 @@ for analysis_name, summary_df in [
         fig.savefig(OUT_DIR / f"09_paired_delta_exponent_{analysis_name}_{state}.png")
         plt.close(fig)
 
-# Δexponent vs effective PC1
+# 指数变化量与有效状态PC1的关系。 / Δexponent vs effective PC1
 plot_df = reg.copy()
 if not plot_df.empty:
     fig, ax = plt.subplots(figsize=(5.2, 4.2), dpi=220)
@@ -1647,7 +1647,7 @@ if not plot_df.empty:
     fig.savefig(OUT_DIR / "09_delta_exponent_vs_effective_PC1.png")
     plt.close(fig)
 
-# Δexponent vs ΔIsing beta
+# 指数变化量与Ising beta变化量的关系。 / Δexponent vs ΔIsing beta
 if "delta_ising_beta_param_vs_fentanyl" in plot_df.columns:
     fig, ax = plt.subplots(figsize=(5.2, 4.2), dpi=220)
 
@@ -1680,7 +1680,7 @@ if "delta_ising_beta_param_vs_fentanyl" in plot_df.columns:
     fig.savefig(OUT_DIR / "09_delta_exponent_vs_delta_IsingBeta.png")
     plt.close(fig)
 
-# Ising beta/c summary plot
+# Ising beta和c的汇总图。 / Ising beta/c summary plot
 ising_plot = sub_region[sub_region["state_label"].isin(["fentanyl", "propofol_early", "propofol_late"])].copy()
 if not ising_plot.empty:
     for ycol, ylabel, fname in [
@@ -1721,7 +1721,7 @@ if not ising_plot.empty:
 
 
 # ============================================================
-# 15. Save run summary
+# 15. 保存运行摘要。 / 15. Save run summary
 # ============================================================
 
 run_summary = {

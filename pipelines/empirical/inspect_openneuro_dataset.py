@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Inventory the local OpenNeuro ds003380 BIDS dataset before analysis."""
+"""分析前建立本地OpenNeuro ds003380 BIDS数据集清单。 / Inventory the local OpenNeuro ds003380 BIDS dataset before analysis."""
 
 from pathlib import Path
 import os
@@ -53,7 +53,7 @@ print("[DONE] extraction")
 
 
 # ------------------------------------------------------------
-# 2. participants.tsv
+# 2. participants.tsv参与者表。 / 2. participants.tsv
 # ------------------------------------------------------------
 print("\n" + "=" * 120)
 print("[STEP 1] participants.tsv")
@@ -110,7 +110,7 @@ else:
 
 
 # ------------------------------------------------------------
-# File-handling details.
+# 文件处理细节。 / File-handling details.
 # ------------------------------------------------------------
 print("\n" + "=" * 120)
 print("[STEP 3] EDF inventory")

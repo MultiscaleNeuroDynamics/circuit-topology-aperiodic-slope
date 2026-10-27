@@ -27,7 +27,7 @@ def list_trial_dirs(base_dir):
     return ds
 
 # =========================================================
-# 1) Real: soma spike -> synapse spike
+# 1）真实拓扑：胞体脉冲映射为突触脉冲。 / 1) Real: soma spike -> synapse spike
 # =========================================================
 def _load_patch_synapses(syn_ee_path: str, syn_ie_path: str) -> pd.DataFrame:
     if not os.path.exists(syn_ee_path):
@@ -60,7 +60,7 @@ def build_real_synapse_spike_table_from_patch(
     out_syn_spike_path: str,
     unit: str = "ms"
 ):
-    # Load input data.
+    # 加载输入数据。 / Load input data.
     soma_df = pd.read_csv(soma_spike_path, header=None, dtype=str)
     neuron_ids = soma_df.iloc[:, 0].astype(np.int64).to_numpy()
 
@@ -71,17 +71,17 @@ def build_real_synapse_spike_table_from_patch(
 
     print(f"[REAL] soma rows: {len(neuron_ids)} | spike columns: {times_raw.shape[1] if times_raw.size else 0}")
 
-    # Load input data.
+    # 加载输入数据。 / Load input data.
     syn_df = _load_patch_synapses(syn_ee_path, syn_ie_path)
     print(f"[REAL] unique patch synapses (EE+IE): {len(syn_df)}")
 
-    # Synapse-processing details.
+    # 突触处理细节。 / Synapse-processing details.
     mask_pre_in_soma = syn_df["pre_pt_root_id"].isin(neuron_ids)
     syn_sub = syn_df.loc[mask_pre_in_soma, ["id", "pre_pt_root_id"]].copy()
 
     print(f"[REAL] synapses with a presynaptic soma row: {len(syn_sub)}")
 
-    # Synapse-processing details.
+    # 突触处理细节。 / Synapse-processing details.
     rows = []
     for row in syn_sub.itertuples(index=False):
         syn_id = int(row.id)
@@ -103,7 +103,7 @@ def build_real_synapse_spike_table_from_patch(
     print(f"[REAL] saved {out_syn_spike_path} | rows={len(syn_spike_df)} | columns={syn_spike_df.shape[1]}")
 
 # =========================================================
-# 2) ER: soma spike + (EE/IE edges weight) -> synapse spike
+# 2）ER拓扑：胞体脉冲结合EE/IE边权重映射为突触脉冲。 / 2) ER: soma spike + (EE/IE edges weight) -> synapse spike
 # =========================================================
 def make_syn_id(prefix2: str, rng: np.random.Generator, used_suffix: set):
     while True:
@@ -204,7 +204,7 @@ def build_er_synapse_spike_table(
     print(f"[ER] output columns: {n_out_cols} (one synapse ID plus {n_spike_cols} spike columns)")
 
 # =========================================================
-# File-handling details.
+# 文件处理细节。 / File-handling details.
 # =========================================================
 if __name__ == "__main__":
     base = os.environ.get(
@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
         real_soma_path = os.path.join(tdir, "microns_patch_spikes_real_ms.csv")
         if not os.path.exists(real_soma_path):
-            real_soma_path = global_real_soma  # fallback
+            real_soma_path = global_real_soma  # 备用处理。 / fallback
 
         er_soma_path = os.path.join(tdir, "microns_patch_spikes_ER_ms.csv")
         ee_edge_path = os.path.join(tdir, "microns_patch_edges_ER_weights.csv")

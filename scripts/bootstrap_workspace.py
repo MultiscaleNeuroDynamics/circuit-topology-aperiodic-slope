@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare the generated workspace from version-controlled MICrONS inputs."""
+"""根据版本控制中的MICrONS输入准备生成数据工作区。 / Prepare the generated workspace from version-controlled MICrONS inputs."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Set this for child processes launched from the same shell instructions.
+    # 为按同一组终端指令启动的子进程设置此值。 / Set this for child processes launched from the same shell instructions.
     workspace_root = args.workspace_root.resolve()
     allen_root = workspace_root / "ALLEN"
     file_root = allen_root / "file"

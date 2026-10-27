@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Map MICrONS patch synapses to morphology segments for each cortical layer."""
+"""将MICrONS局部网络突触映射到各皮层层的形态分段。 / Map MICrONS patch synapses to morphology segments for each cortical layer."""
 
 import os
 import re
@@ -14,13 +14,13 @@ def build_clean_synapse_segment_maps(
     out_dir: str,
     swc_layer_names=("L2/3", "L4", "L5", "L6"),
 ):
-    """Create four two-column synapse-to-segment mapping tables."""
+    """创建四个两列的突触到分段映射表。 / Create four two-column synapse-to-segment mapping tables."""
 
     # ======================================================
     # ======================================================
     layer_to_swc = {}
     if isinstance(swc_paths, dict):
-        # File-handling details.
+        # 文件处理细节。 / File-handling details.
         for k, v in swc_paths.items():
             kk = str(k).strip()
             if kk in swc_layer_names:
@@ -68,7 +68,7 @@ def build_clean_synapse_segment_maps(
             raise ValueError(f"cells_patch.csv is missing required column: {c}")
 
     # ======================================================
-    # 2) layer_auto
+    # 2）自动分层。 / 2) layer_auto
     # ======================================================
     def map_layer(ct):
         if pd.isna(ct):
@@ -107,7 +107,7 @@ def build_clean_synapse_segment_maps(
                           "classification_system_auto", "layer_auto"]].copy()
 
     # ======================================================
-    # 3) syn pre/post & synapse_id
+    # 3）突触前后信息与突触标识符。 / 3) syn pre/post & synapse_id
     # ======================================================
     def pick_pre_post_cols(df):
         if "pre_pt_root_id" in df.columns and "post_pt_root_id" in df.columns:
@@ -129,7 +129,7 @@ def build_clean_synapse_segment_maps(
     syn_id_col_ie = pick_syn_id_col(syn_ie)
 
     # ======================================================
-    # 4) post_pt_position -> post_xt/yt/zt (transform_vx)
+    # 4）使用transform_vx将突触后位置转换为post_xt/yt/zt。 / 4) post_pt_position -> post_xt/yt/zt (transform_vx)
     # ======================================================
     def parse_vec3(val):
         if isinstance(val, (list, tuple, np.ndarray)):
@@ -179,7 +179,7 @@ def build_clean_synapse_segment_maps(
         return d
 
     # ======================================================
-    # 5) SWC -> segments (z0,y0,z1,y1) relative soma
+    # 5）将SWC转换为相对胞体的分段坐标z0、y0、z1、y1。 / 5) SWC -> segments (z0,y0,z1,y1) relative soma
     # ======================================================
     TYPE_SOMA = 1
     TYPE_DEND = 3
@@ -276,7 +276,7 @@ def build_clean_synapse_segment_maps(
             sid, eid = int(seg[0]), int(seg[-1])
             p0 = data[mp[sid], 2:5] - soma_mean
             p1 = data[mp[eid], 2:5] - soma_mean
-            seg_xy.append((float(p0[2]), float(p0[1]), float(p1[2]), float(p1[1])))  # z0,y0,z1,y1
+            seg_xy.append((float(p0[2]), float(p0[1]), float(p1[2]), float(p1[1])))  # 分段起止点的z与y坐标。 / z0,y0,z1,y1
         return seg_xy, data
 
     def load_swc_segments_zy(swc_path):
@@ -303,7 +303,7 @@ def build_clean_synapse_segment_maps(
 
         d = d[d[post_col].isin(core_ids)].copy()
 
-        # post_class/post_layer
+        # 突触后细胞类别与皮层层次。 / post_class/post_layer
         if "post_class" not in d.columns:
             tmp = cells_lookup[["pt_root_id", "classification_system_auto"]].rename(
                 columns={"pt_root_id": "__pid", "classification_system_auto": "post_class"}
@@ -316,7 +316,7 @@ def build_clean_synapse_segment_maps(
             )
             d = d.merge(tmp, left_on=post_col, right_on="__pid", how="left").drop(columns=["__pid"])
 
-        # post soma y/z
+        # 突触后胞体的y与z坐标。 / post soma y/z
         tmp = cells_lookup[["pt_root_id", "pt_yt", "pt_zt"]].rename(
             columns={"pt_root_id": "__pid", "pt_yt": "post_soma_yt", "pt_zt": "post_soma_zt"}
         )
@@ -325,13 +325,13 @@ def build_clean_synapse_segment_maps(
         d = d[d["post_class"] == "excitatory_neuron"].copy()
         d = d[d["post_layer"].isin(layers_of_interest)].copy()
 
-        # synapse_id
+        # 突触标识符。 / synapse_id
         if syn_id_col is None:
             d["synapse_id"] = (tag + "_") + d.index.astype(str)
         else:
             d["synapse_id"] = d[syn_id_col].astype(str)
 
-        # Synapse-processing details.
+        # 突触处理细节。 / Synapse-processing details.
         use_syn = False
         if all(c in d.columns for c in ["post_yt", "post_zt"]) and d[["post_yt", "post_zt"]].notna().all(axis=1).any():
             good = d[["post_yt", "post_zt"]].notna().all(axis=1)
@@ -376,7 +376,7 @@ def build_clean_synapse_segment_maps(
         if layer not in layer_centers:
             return pd.DataFrame(columns=["synapse_id", "segment_id"])
 
-        segs = swc_segments_by_layer[layer]  # (nseg,4) z0,y0,z1,y1 REL
+        segs = swc_segments_by_layer[layer]  # 形状为nseg×4的相对坐标z0、y0、z1、y1。 / (nseg,4) z0,y0,z1,y1 REL
         nseg = segs.shape[0]
         if nseg == 0:
             return pd.DataFrame(columns=["synapse_id", "segment_id"])
@@ -436,7 +436,7 @@ def build_clean_synapse_segment_maps(
         })
 
     # ======================================================
-    # Output handling.
+    # 输出处理。 / Output handling.
     # ======================================================
     layer_to_outname = {
         "L2/3": "syn_to_segment_L2_3.csv",

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""One-command, restart-safe m=0.99 DP40 dynamics-to-LFP pipeline.
+"""支持续跑的一键m=0.99 DP40动力学至LFP流程。全部DP工作隔离在m_0.99_DP40和final_DP40下；已有主要REAL和ER输出仅供读取，绝不作为输出目标。 / One-command, restart-safe m=0.99 DP40 dynamics-to-LFP pipeline.
 
 All DP work is isolated under m_0.99_DP40 and final_DP40. Existing primary
 REAL and ER outputs are read-only and are never used as output targets.
@@ -91,7 +91,7 @@ def validate_files(root: Path, filenames, label: str):
 
 
 def locate_lfp(save_root: Path, trial_id: int, layer: str):
-    # The validated legacy script may use either layout depending on version.
+    # 经验证的旧脚本可能随版本使用任一目录结构。 / The validated legacy script may use either layout depending on version.
     candidates = (
         save_root / f"ER_trial{trial_id:04d}" / layer / "_lfp.npy",
         save_root / f"ER_trial{trial_id:04d}" / layer / layer / "_lfp.npy",
@@ -171,8 +171,8 @@ def main():
             "PATCH_DIR": str(allen_root / "file" / "patch"),
             "SELECT_SWC_ROOT": str(allen_root / "file" / "select_swc"),
             "PARAM_FILE": str(allen_root / "file" / "swc" / "parameter.json"),
-            # Legacy control simulator reads SAVE_ROOT_ER.  It is redirected to
-            # the isolated DP directory, never to the manuscript final_ER tree.
+            # 旧对照模拟器读取SAVE_ROOT_ER，将其重定向到 / Legacy control simulator reads SAVE_ROOT_ER.  It is redirected to
+            # 独立DP目录，绝不指向论文的final_ER目录树。 / the isolated DP directory, never to the manuscript final_ER tree.
             "SAVE_ROOT_ER": str(save_root),
             "MAX_WORKERS": str(args.max_workers),
             "MECHANISM_ROOT": str(REPOSITORY_ROOT / "mechanisms"),
@@ -227,8 +227,8 @@ def main():
     if lfp_complete(save_root):
         print("[SKIP] all 160 DP _lfp.npy files already exist")
     else:
-        # The worker-level code skips each existing _lfp.npy.  Therefore an
-        # interrupted partial DP run resumes without overwriting completed LFPs.
+        # 工作进程代码跳过每个已有_lfp.npy，因此 / The worker-level code skips each existing _lfp.npy.  Therefore an
+        # 中断后的DP部分运行可续跑且不覆盖已完成的LFP。 / interrupted partial DP run resumes without overwriting completed LFPs.
         run_script("neuron_control", env)
     validate_lfp(save_root)
     print(f"[ALL COMPLETE] m=0.99 DP40 LFP: {save_root}")

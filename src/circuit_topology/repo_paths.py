@@ -1,4 +1,4 @@
-"""Repository and generated-workspace path helpers."""
+"""代码库及生成数据工作区的路径辅助函数。 / Repository and generated-workspace path helpers."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ MECHANISM_ROOT = REPOSITORY_ROOT / "mechanisms"
 
 
 def ensure_workspace() -> None:
-    """Create generated-data directories without overwriting existing results."""
+    """创建生成数据目录，不覆盖已有结果。 / Create generated-data directories without overwriting existing results."""
     for path in (FILE_ROOT, SAVE_ROOT, RESULTS_ROOT):
         path.mkdir(parents=True, exist_ok=True)
 

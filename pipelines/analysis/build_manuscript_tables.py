@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble manuscript-ready Tables 1--3 from generated analysis outputs.
+"""从已生成的分析结果汇编可用于论文的表1至表3。本脚本不重新拟合模型，而是提取已估计的聚类稳健系数、工作点交互作用、生物物理稳健性范围及三种拓扑的斜率对比，生成简洁的CSV表。 / Assemble manuscript-ready Tables 1--3 from generated analysis outputs.
 
 This script performs no new model fitting.  It extracts the already estimated
 cluster-robust coefficients, operating-point interactions, biophysical

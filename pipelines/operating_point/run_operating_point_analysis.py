@@ -1,4 +1,4 @@
-"""Run the shared E/I and regression analysis at m=0.90 and/or m=0.95."""
+"""在m=0.90和/或m=0.95运行共享兴奋/抑制比及回归分析。 / Run the shared E/I and regression analysis at m=0.90 and/or m=0.95."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run lightweight checks for the public reproducibility release."""
+"""运行公开可重复性发布包的轻量检查。 / Run lightweight checks for the public reproducibility release."""
 
 from __future__ import annotations
 

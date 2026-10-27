@@ -21,7 +21,7 @@ TYPE_DEND = 3
 
 
 class cortical_neuron():
-    """Morphology-based compartmental neuron used by the LFP simulations."""
+    """用于LFP模拟的基于形态的多室神经元。 / Morphology-based compartmental neuron used by the LFP simulations."""
 
     mechanismFolder = str(
         Path(os.environ.get(
@@ -45,11 +45,11 @@ class cortical_neuron():
 
         self.sectionList = h.SectionList()
 
-        # Path.stem is portable across Linux and Windows path separators.
+        # Path.stem兼容Linux与Windows的路径分隔符。 / Path.stem is portable across Linux and Windows path separators.
         mType = Path(mFile).stem
 
         # ======================================================
-        # 1) Soma
+        # 1）胞体。 / 1) Soma
         # ======================================================
         self.soma = h.Section(name='soma')
         secType['soma'] = TYPE_SOMA
@@ -72,7 +72,7 @@ class cortical_neuron():
         self.soma.push()
         h.pt3dclear()
 
-        xSoma = morphData[morphData[:, 1] == TYPE_SOMA, 2:6]  # x,y,z,r
+        xSoma = morphData[morphData[:, 1] == TYPE_SOMA, 2:6]  # 三维坐标x、y、z与半径r。 / x,y,z,r
         if xSoma.size == 0:
             raise ValueError(f"[SWC TYPE ERROR] No soma points (type={TYPE_SOMA}) found in: {mFile}")
 
@@ -141,8 +141,8 @@ class cortical_neuron():
         # ======================================================
         # ======================================================
         for i in range(len(connections)):
-            i1 = int(connections[i][0])  # parent seg index
-            i0 = int(connections[i][1])  # child seg index
+            i1 = int(connections[i][0])  # 父分段索引。 / parent seg index
+            i0 = int(connections[i][1])  # 子分段索引。 / child seg index
 
             child_sec = seg_to_sec.get(i0, None)
             if child_sec is None:

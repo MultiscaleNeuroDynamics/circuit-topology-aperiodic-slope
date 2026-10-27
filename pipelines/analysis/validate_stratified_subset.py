@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+"""对REAL和ER拓扑进行按兴奋/抑制比分层的子集分析。目的：用全部配对试次开展主要分析；选择覆盖完整兴奋/抑制范围的40个固定、可重复的配对试次，为高成本敏感性模拟做准备；多次重复分层抽样，检查40试次结论是否稳定而非依赖有利子集。模型M1至M4依次包含EI_ratio、topology、两者相加及两者交互项。REAL为参考拓扑；同一试次的REAL和ER构成配对，因此标准误和95%置信区间按试次聚类。 / 
 E/I-stratified subset analysis for REAL versus ER topology.
 
 Purpose
@@ -32,7 +32,7 @@ import statsmodels.formula.api as smf
 
 
 # ============================================================================
-# 1. User settings
+# 1. 用户设置。 / 1. User settings
 # ============================================================================
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", REPOSITORY_ROOT / "work")).resolve()
@@ -59,7 +59,7 @@ INTERACTION_TERM = "EI_ratio:C(topology)[T.ER]"
 
 
 # ============================================================================
-# 2. Read and strictly align paired trial data
+# 2. 读取并严格对齐配对试次数据。 / 2. Read and strictly align paired trial data
 # ============================================================================
 def load_paired_data(ei_csv, exp_csv):
     df_ei = pd.read_csv(ei_csv)
@@ -72,8 +72,8 @@ def load_paired_data(ei_csv, exp_csv):
     if missing:
         raise RuntimeError(f"Missing required columns: {missing}")
 
-    # Prefer an explicit trial-key merge. If neither table has a trial column,
-    # row alignment is used and clearly recorded by a generated trial ID.
+    # 优先按显式试次键合并；若两表均无试次列， / Prefer an explicit trial-key merge. If neither table has a trial column,
+    # 则按行对齐，并通过生成的试次标识符明确记录。 / row alignment is used and clearly recorded by a generated trial ID.
     if "trial" in df_ei.columns and "trial" in df_exp.columns:
         if df_ei["trial"].astype(str).duplicated().any():
             raise RuntimeError("Duplicate trial IDs found in the E/I table")
@@ -129,7 +129,7 @@ def load_paired_data(ei_csv, exp_csv):
             f"cannot select {N_SELECT}."
         )
 
-    # A topology-neutral value used only for stratification/selection.
+    # 仅用于分层和选择的拓扑中性数值。 / A topology-neutral value used only for stratification/selection.
     paired["mean_EI"] = (
         paired["REAL_EI_ratio"] + paired["ER_EI_ratio"]
     ) / 2.0
@@ -156,13 +156,13 @@ def paired_to_long(paired):
 
 
 # ============================================================================
-# 3. Prespecified fixed selection: one representative per E/I stratum
+# 3. 预先指定的固定选择：每个兴奋/抑制层选一个代表。 / 3. Prespecified fixed selection: one representative per E/I stratum
 # ============================================================================
 def assign_equal_count_strata(paired, n_strata):
-    """Assign nearly equal-sized rank strata without qcut duplicate-edge issues."""
+    """按秩分配近似等大的分层，避免qcut重复边界问题。 / Assign nearly equal-sized rank strata without qcut duplicate-edge issues."""
     ranked = paired.sort_values(["mean_EI", "trial"]).copy().reset_index(drop=True)
-    # array_split guarantees that all trials are assigned and group sizes differ
-    # by no more than one.
+    # array_split确保全部试次均被分配，且各组大小 / array_split guarantees that all trials are assigned and group sizes differ
+    # 最多相差一个。 / by no more than one.
     index_groups = np.array_split(np.arange(len(ranked)), n_strata)
     ranked["EI_stratum"] = -1
     for stratum, indices in enumerate(index_groups, start=1):
@@ -172,12 +172,12 @@ def assign_equal_count_strata(paired, n_strata):
 
 
 def select_fixed_representatives(stratified):
-    """Select the observation closest to each stratum's median mean_EI."""
+    """选择最接近各层mean_EI中位数的观测。 / Select the observation closest to each stratum's median mean_EI."""
     chosen_rows = []
     for stratum, group in stratified.groupby("EI_stratum", sort=True):
         target = group["mean_EI"].median()
         candidates = group.assign(distance_to_stratum_median=(group["mean_EI"] - target).abs())
-        # Sorting by trial provides deterministic tie breaking.
+        # 按试次排序，确保并列情况的处理可重复。 / Sorting by trial provides deterministic tie breaking.
         selected = candidates.sort_values(
             ["distance_to_stratum_median", "trial"]
         ).iloc[0]
@@ -189,7 +189,7 @@ def select_fixed_representatives(stratified):
 
 
 # ============================================================================
-# 4. Cluster-robust regressions with 95% confidence intervals
+# 4. 聚类稳健回归与95%置信区间。 / 4. Cluster-robust regressions with 95% confidence intervals
 # ============================================================================
 def fit_one_model(formula, long_df):
     ordinary = smf.ols(formula=formula, data=long_df).fit()
@@ -250,7 +250,7 @@ def extract_term(coef_df, model, term):
 
 
 def topology_attenuation(coef_df, analysis_name):
-    """Describe change in the absolute topology coefficient from M2 to M3."""
+    """描述拓扑系数绝对值从M2到M3的变化。 / Describe change in the absolute topology coefficient from M2 to M3."""
     m2 = extract_term(coef_df, "M2_topology_only", TOPOLOGY_TERM)
     m3 = extract_term(coef_df, "M3_EI_plus_topology", TOPOLOGY_TERM)
     if m2 is None or m3 is None:
@@ -276,7 +276,7 @@ def topology_attenuation(coef_df, analysis_name):
 
 
 # ============================================================================
-# 5. Repeated stratified sampling of 40 paired trials
+# 5. 重复分层抽取40个配对试次。 / 5. Repeated stratified sampling of 40 paired trials
 # ============================================================================
 TRACKED_TERMS = [
     ("M1_EI_only", "EI_ratio", "M1_EI"),
@@ -375,7 +375,7 @@ def summarize_resamples(results, full_coef):
 
 
 # ============================================================================
-# 6. Main
+# 6. 主程序。 / 6. Main
 # ============================================================================
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -387,7 +387,7 @@ def main():
     full_long = paired_to_long(paired)
     fixed20_long = paired_to_long(fixed20)
 
-    # Save source/selection tables before fitting models.
+    # 拟合模型前保存来源表和选择表。 / Save source/selection tables before fitting models.
     paired.to_csv(
         os.path.join(OUT_DIR, "all_paired_trials_with_mean_EI.csv"),
         index=False, encoding="utf-8-sig"
@@ -405,7 +405,7 @@ def main():
         index=False, encoding="utf-8-sig"
     )
 
-    # Primary full-data analysis and fixed 20-trial reference analysis.
+    # 全数据主要分析与固定20试次参考分析。 / Primary full-data analysis and fixed 20-trial reference analysis.
     full_coef, full_fit = run_model_set(full_long, "all_trials_primary")
     sub_coef, sub_fit = run_model_set(fixed20_long, "fixed_stratified_20")
     coefficient_results = pd.concat([full_coef, sub_coef], ignore_index=True)
@@ -433,7 +433,7 @@ def main():
         index=False, encoding="utf-8-sig"
     )
 
-    # Repeated sampling assesses stability; it does not search for a significant subset.
+    # 重复抽样用于评估稳定性，不用于寻找显著的子集。 / Repeated sampling assesses stability; it does not search for a significant subset.
     resample_results, resample_selections = repeated_stratified_analysis(
         stratified, N_RESAMPLES, RANDOM_SEED
     )

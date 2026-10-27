@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""One-command, restart-safe controller for the endpoint biophysical control."""
+"""端点生物物理对照的一键运行、支持断点续跑的控制器。 / One-command, restart-safe controller for the endpoint biophysical control."""
 
 from __future__ import annotations
 

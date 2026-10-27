@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Passive multicompartment neuron with explicit Ra, leak and cm controls."""
+"""可显式控制Ra、漏电导及cm的被动多室神经元。 / Passive multicompartment neuron with explicit Ra, leak and cm controls."""
 
 from __future__ import annotations
 
@@ -36,8 +36,8 @@ class cortical_neuron:
         self.soma.insert("Leak")
         self.soma.e_Leak, self.soma.gmax_Leak = erev, gleak
         self.soma.Ra, self.soma.cm = ra, cm
-        # Preserve the baseline implementation if active soma was enabled in
-        # parameter.json.  The sensitivity control does not add active dendrites.
+        # 如果在parameter.json中启用了主动胞体， / Preserve the baseline implementation if active soma was enabled in
+        # 则保留基线实现；该敏感性对照不添加主动树突。 / parameter.json.  The sensitivity control does not add active dendrites.
         mtype = Path(mFile).stem
         if pars.get("activeSoma", False):
             self.soma.insert("inaT")

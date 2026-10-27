@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r"""Create the publication-ready horizontal propofol result figure.
+r"""生成可发表的横向丙泊酚结果图：a为皮层与丘脑原始非周期指数变化的配对图；b为分区域自适应Ising beta变化量分布；c为残差化森林图；d为调整后配对残差图。画布与figure1.pdf相同，为758.352×412.304磅，即10.5327×5.7264英寸，使用原文所示的正文宽度LaTeX插图命令；保存PDF时不使用紧边界裁剪，保持固定页面尺寸。审稿统计包括配对Cohen dz、小样本校正Hedges gz、动物平均对比及dz的95%自助法区间、逐一剔除动物的敏感性分析，并同时报告标准穷举符号翻转p值与历史保守加一p值。加一校正适用于随机蒙特卡洛置换，穷举全部2**n种符号时不需要。 / Create the publication-ready horizontal propofol result figure.
 
 Revised visual design:
     a: raw propofol-induced aperiodic exponent change, Ctx vs Thal paired plot
@@ -34,7 +34,7 @@ from matplotlib.text import Text
 
 
 # ============================================================
-# 0. Paths and fixed analysis choices
+# 0. 路径与固定分析选择。 / 0. Paths and fixed analysis choices
 # ============================================================
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -59,33 +59,33 @@ OUT_DIR.mkdir(exist_ok=True, parents=True)
 STATE = "propofol_early"
 ANALYSIS = "all_available_pre_ischemia"
 
-# Base controls for all figure panels:
-# - FOOOF R² hard filtering is already done in step2 and repeated in step3;
-# - low-amplitude/low-power epoch-channel QC is reproduced here only for panel b;
-# - matched-channel subsampling is used for panel b so β change is not driven by 9 cortex vs 2 thalamus channels.
+# 所有面板的基础控制措施如下。 / Base controls for all figure panels:
+# FOOOF R²硬性筛选已在step2完成，并在step3重复。 / - FOOOF R² hard filtering is already done in step2 and repeated in step3;
+# 此处仅为面板b重现低振幅或低功率时间段与通道质控。 / - low-amplitude/low-power epoch-channel QC is reproduced here only for panel b;
+# 面板b使用匹配通道子抽样，避免beta变化由9个皮层通道与2个丘脑通道的不均衡驱动。 / - matched-channel subsampling is used for panel b so β change is not driven by 9 cortex vs 2 thalamus channels.
 MIN_FOOOF_R2 = 0.80
 SIGNAL_QC_LOWER_QUANTILE_BY_REGION = 0.02
 MIN_CHANNEL_SIGNAL_PASS_FRACTION = 0.70
 N_MATCHED_CHANNEL_DRAWS_FOR_BETA = 5000
 MATCHED_CHANNEL_RANDOM_SEED_FOR_BETA = 20260630
 
-# Match the media-box size of figure1.pdf.
+# 匹配figure1.pdf的页面框尺寸。 / Match the media-box size of figure1.pdf.
 FIG_W_IN = 758.352 / 72.0
 FIG_H_IN = 412.304 / 72.0
 
-# The figure is inserted into the manuscript at approximately 7.16 inches
-# while its fixed PDF media-box width is 10.5327 inches. Matplotlib font
-# sizes are therefore enlarged so that the effective size after LaTeX
-# downscaling remains safely above the editor's 10-pt requirement.
+# 该图以约7.16英寸宽度插入论文， / The figure is inserted into the manuscript at approximately 7.16 inches
+# 固定PDF页面框宽度为10.5327英寸，因此放大matplotlib字体， / while its fixed PDF media-box width is 10.5327 inches. Matplotlib font
+# 确保经LaTeX缩放后的实际字号 / sizes are therefore enlarged so that the effective size after LaTeX
+# 仍高于编辑要求的10磅。 / downscaling remains safely above the editor's 10-pt requirement.
 FINAL_INSERT_WIDTH_IN = 7.16
 MANUSCRIPT_SCALE = FINAL_INSERT_WIDTH_IN / FIG_W_IN
 MIN_FINAL_FONT_PT = 10.0
 
 def source_pt(final_pt):
-    """Convert a desired final manuscript font size to source-PDF points."""
+    """将期望的最终论文字号转换为源PDF磅数。 / Convert a desired final manuscript font size to source-PDF points."""
     return float(final_pt) / MANUSCRIPT_SCALE
 
-# Effective final manuscript font targets.
+# 最终论文中实际字体大小的目标值。 / Effective final manuscript font targets.
 FONT_BASE = source_pt(10.3)
 FONT_LABEL = source_pt(10.4)
 FONT_TITLE = source_pt(10.5)
@@ -97,12 +97,12 @@ FONT_STAR = source_pt(12.0)
 FONT_PANEL = source_pt(12.5)
 
 FINAL_MODEL_CANDIDATES = [
-    # Main displayed final model keeps the same conceptual label as before:
-    # + Ising 1−κI.  All rows are now from the matched-channel/QC/R²-filtered
-    # result tables, so QC + matched channels + FOOOF R² are treated as base controls.
+    # 主要展示的最终模型保留之前的概念标签， / Main displayed final model keeps the same conceptual label as before:
+    # 即加入Ising 1−κI。全部行均来自匹配通道、质控和R²筛选后的 / + Ising 1−κI.  All rows are now from the matched-channel/QC/R²-filtered
+    # 结果表，因此将质控、通道匹配与FOOOF R²视为基础控制。 / result tables, so QC + matched channels + FOOOF R² are treated as base controls.
     "R5_PC123_baseline_IsingDistance",
     "R5_PC123_baseline_offset_IsingDistance",
-    # Fallbacks if only the beta/c main model is available.
+    # 仅有beta/c主模型时的备用方案。 / Fallbacks if only the beta/c main model is available.
     "R7_MAIN_PC123_baseline_IsingBetaC_signalQC_matchedChannels",
     "R8_sensitivity_PC123_baseline_IsingBetaC_fitR2",
 ]
@@ -139,7 +139,7 @@ COLORS = {
 
 
 # ============================================================
-# 1. Style helpers
+# 1. 样式辅助函数。 / 1. Style helpers
 # ============================================================
 
 def set_pub_style():
@@ -180,7 +180,7 @@ def clean_ax(ax):
 
 
 def add_panel_label_fig(fig, ax, label, dx=-0.026, dy=0.044):
-    """Place panel letters in figure coordinates so they do not collide with axis labels/titles."""
+    """在图坐标中放置面板字母，避免与坐标标签或标题碰撞。 / Place panel letters in figure coordinates so they do not collide with axis labels/titles."""
     box = ax.get_position()
     fig.text(
         box.x0 + dx,
@@ -203,7 +203,7 @@ def p_label(p):
 
 
 def exact_p_label(p):
-    """Compact label for the exhaustive two-sided sign-flip p-value."""
+    """穷举双侧符号翻转p值的简短标签。 / Compact label for the exhaustive two-sided sign-flip p-value."""
     if not np.isfinite(p):
         return r"$p_{exact}$ = n.a."
     if p < 0.001:
@@ -212,7 +212,7 @@ def exact_p_label(p):
 
 
 def compact_effect_annotation(vals, seed=20260813):
-    """Two compact figure lines; full precision remains in the CSV outputs."""
+    """图中显示两行简短文字，CSV输出保留完整精度。 / Two compact figure lines; full precision remains in the CSV outputs."""
     vals = finite_values(vals)
     mean_val, p_exact, _, n = exact_signflip_one_sample(vals)
     dz, _ = paired_standardized_effect(vals)
@@ -278,7 +278,7 @@ def pivot_region_pairs(df, value_col, group_cols=("animal_id", "group")):
 
 
 def exact_signflip_one_sample(vals):
-    """Two-sided exhaustive sign-flip test.
+    """双侧穷举符号翻转检验。枚举全部2**n种符号，标准精确p值为计数除以2**n，无需蒙特卡洛加一校正。另行返回保守加一值以衔接早期分析；n=6时其最小值为3/65，即0.0462。 / Two-sided exhaustive sign-flip test.
 
     Because all 2**n sign patterns are enumerated, the canonical exact p-value
     is count / 2**n; the Monte-Carlo ``+1`` correction is not needed.  The
@@ -315,7 +315,7 @@ def bootstrap_ci(vals, n_boot=10000, ci=95, seed=20260629):
 
 
 def paired_standardized_effect(vals):
-    """Cohen's dz and its small-sample corrected counterpart Hedges' gz."""
+    """Cohen dz及其小样本校正形式Hedges gz。 / Cohen's dz and its small-sample corrected counterpart Hedges' gz."""
     vals = finite_values(vals)
     n = len(vals)
     if n < 2:
@@ -324,13 +324,13 @@ def paired_standardized_effect(vals):
     if not np.isfinite(sd) or sd <= 0:
         return np.nan, np.nan
     dz = float(np.mean(vals) / sd)
-    # Hedges correction using df=n-1; accurate and stable for the present n.
+    # Hedges校正使用自由度n−1，对当前样本量准确且稳定。 / Hedges correction using df=n-1; accurate and stable for the present n.
     correction = 1.0 - 3.0 / (4.0 * (n - 1.0) - 1.0)
     return dz, float(correction * dz)
 
 
 def bootstrap_effect_ci(vals, n_boot=20000, ci=95, seed=20260813):
-    """Percentile bootstrap CIs for the paired mean and Cohen's dz."""
+    """配对均值和Cohen dz的百分位自助法置信区间。 / Percentile bootstrap CIs for the paired mean and Cohen's dz."""
     vals = finite_values(vals)
     n = len(vals)
     if n == 0:
@@ -356,7 +356,7 @@ def bootstrap_effect_ci(vals, n_boot=20000, ci=95, seed=20260813):
 
 
 def summarize_small_sample_effect(vals, label, model, seed=20260813):
-    """One audit-ready row for a paired/one-sample animal-level contrast."""
+    """为配对或单样本动物层面对比生成一行可核查结果。 / One audit-ready row for a paired/one-sample animal-level contrast."""
     vals = finite_values(vals)
     mean_val, p_exact, p_plus1, n = exact_signflip_one_sample(vals)
     dz, gz = paired_standardized_effect(vals)
@@ -379,7 +379,7 @@ def summarize_small_sample_effect(vals, label, model, seed=20260813):
 
 
 def leave_one_animal_out_sensitivity(vals_df, value_col, label, model):
-    """Repeat the effect after omitting each animal in turn."""
+    """依次剔除每只动物后重新计算效应。 / Repeat the effect after omitting each animal in turn."""
     d = vals_df[["animal_id", value_col]].copy()
     d[value_col] = pd.to_numeric(d[value_col], errors="coerce")
     d = d[np.isfinite(d[value_col])].drop_duplicates("animal_id")
@@ -401,7 +401,7 @@ def leave_one_animal_out_sensitivity(vals_df, value_col, label, model):
 
 
 def build_reviewer_requested_statistics(diffs, final_model):
-    """Effect sizes, uncertainty, and leave-one-animal-out sensitivity.
+    """效应量、不确定性及逐一剔除动物的敏感性分析。直接回应审稿人关于生物样本量小、效应量、置信区间和个体影响的要求。推断单位始终为动物，不将通道或时间段观测作为独立样本数。 / Effect sizes, uncertainty, and leave-one-animal-out sensitivity.
 
     These analyses directly address the reviewer requests concerning the small
     biological sample, effect-size reporting, confidence intervals, and
@@ -481,7 +481,7 @@ def get_test_row(tests, model, analysis=ANALYSIS, state=STATE):
 
 
 def audit_final_font_sizes(fig, min_final_pt=MIN_FINAL_FONT_PT):
-    """Report any visible text that would fall below 10 pt after LaTeX scaling."""
+    """报告经LaTeX缩放后小于10磅的可见文字。 / Report any visible text that would fall below 10 pt after LaTeX scaling."""
     fig.canvas.draw()
     issues = []
     for obj in fig.findobj(match=lambda artist: isinstance(artist, Text)):
@@ -505,7 +505,7 @@ def audit_final_font_sizes(fig, min_final_pt=MIN_FINAL_FONT_PT):
 
 
 def save_fixed_canvas(fig, stem="figurefinal"):
-    # Do NOT use bbox_inches='tight': keeping fixed page size makes LaTeX scaling identical to figure1.pdf.
+    # 不要使用bbox_inches='tight'：固定页面尺寸使LaTeX缩放与figure1.pdf一致。 / Do NOT use bbox_inches='tight': keeping fixed page size makes LaTeX scaling identical to figure1.pdf.
     for ext in ["pdf", "png", "svg"]:
         fig.savefig(
             OUT_DIR / f"{stem}.{ext}",
@@ -515,7 +515,7 @@ def save_fixed_canvas(fig, stem="figurefinal"):
 
 
 # ============================================================
-# 2. Data preparation
+# 2. 数据准备。 / 2. Data preparation
 # ============================================================
 
 def compute_raw_animal_means(epoch_df):
@@ -564,7 +564,7 @@ def infer_signal_amplitude_columns_for_plot(df):
 
 
 def apply_base_qc_for_beta_panel(df):
-    """Reproduce the base QC for panel b.
+    """为面板b重现基础质控。面板a/c/d直接读取匹配通道的step3输出；b从step2 Ising beta列计算，因此应用相同的FOOOF R²硬筛选、低振幅通道质控和更新后的Ising信号及拟合质控。 / Reproduce the base QC for panel b.
 
     Panels a/c/d read the matched-channel step3 outputs directly. Panel b is computed
     from step2 Ising beta columns, so we apply the same base logic here:
@@ -608,7 +608,7 @@ def apply_base_qc_for_beta_panel(df):
         d["qc_channel_signal_pass_fraction"] = d.groupby(group_cols)["qc_signal_row_pass"].transform("mean")
         d = d[d["qc_channel_signal_pass_fraction"] >= MIN_CHANNEL_SIGNAL_PASS_FRACTION].copy()
 
-    # This is the key update after adding Ising full-state signal QC in step2.
+    # 这是在step2加入Ising全状态信号质控后的关键更新。 / This is the key update after adding Ising full-state signal QC in step2.
     if "ising_control_ok" in d.columns:
         d = d[d["ising_control_ok"].fillna(False).astype(bool)].copy()
     else:
@@ -629,7 +629,7 @@ def _stable_seed_for_beta(*parts, base_seed=MATCHED_CHANNEL_RANDOM_SEED_FOR_BETA
 
 
 def compute_statewise_ising_beta_means(epoch_df):
-    """Return matched-channel animal-level Δ adaptive-Ising beta for panel b.
+    """返回面板b所需的匹配通道、动物层面的自适应Ising beta变化量。结果每只动物与区域一行，通过随机子抽样平衡皮层和丘脑通道数。 / Return matched-channel animal-level Δ adaptive-Ising beta for panel b.
 
     The returned table is already the panel-b data: one row per animal × region,
     with cortex/thalamus channel counts balanced by random subsampling.
@@ -706,7 +706,7 @@ def compute_statewise_ising_beta_means(epoch_df):
     if draws.empty:
         return pd.DataFrame(columns=["animal_id", "group", "region", "delta_beta"])
 
-    # Save draw-level values for auditability.
+    # 保存逐次抽样值，便于核查。 / Save draw-level values for auditability.
     draws.to_csv(OUT_DIR / "figurefinal_beta_delta_matched_draw_level_values.csv", index=False, encoding="utf-8-sig")
 
     out = (
@@ -725,7 +725,7 @@ def compute_statewise_ising_beta_means(epoch_df):
 
 
 def compute_beta_delta_by_region(state_beta):
-    # New path: compute_statewise_ising_beta_means already returns matched-channel Δβ values.
+    # 新路径：compute_statewise_ising_beta_means已返回匹配通道的beta变化量。 / New path: compute_statewise_ising_beta_means already returns matched-channel Δβ values.
     if "delta_beta" in state_beta.columns:
         return state_beta.copy()
     return pd.DataFrame(columns=["animal_id", "group", "region", "delta_beta"])
@@ -743,11 +743,11 @@ def get_model_diff_values(diffs, model):
 
 
 # ============================================================
-# 3. Panel plotting functions
+# 3. 面板绘图函数。 / 3. Panel plotting functions
 # ============================================================
 
 def draw_panel_a(ax, matched_diffs, tests):
-    """Panel a uses draw-averaged matched-channel R0 values.
+    """面板a使用抽样平均匹配通道的R0值。R0为完成信号质控、FOOOF R²硬筛选和匹配通道子抽样后的原始指数变化量；视觉上仍是原始丙泊酚诱导变化，但与面板c/d使用相同的质控和匹配数据基础。 / Panel a uses draw-averaged matched-channel R0 values.
 
     R0 is raw delta exponent after the base pipeline:
     signal QC + FOOOF R² hard filtering + matched-channel subsampling.
@@ -761,9 +761,9 @@ def draw_panel_a(ax, matched_diffs, tests):
         ax.scatter(0, r["cortex"], s=58, color=COLORS["cortex"], edgecolor="white", linewidth=0.8, zorder=3)
         ax.scatter(1, r["thalamus"], s=58, color=COLORS["thalamus"], edgecolor="white", linewidth=0.8, zorder=3)
 
-    # Keep the main-text figure visually lean: show only the contrast and the
-    # canonical exhaustive p-value. Effect sizes, confidence intervals, n, and
-    # leave-one-animal-out results are reported in the caption/text and CSVs.
+    # 正文图保持简洁，仅显示对比和 / Keep the main-text figure visually lean: show only the contrast and the
+    # 标准穷举p值；效应量、置信区间、样本数及 / canonical exhaustive p-value. Effect sizes, confidence intervals, n, and
+    # 逐一剔除动物的结果在图注、正文和CSV中报告。 / leave-one-animal-out results are reported in the caption/text and CSVs.
     vals = wide["thalamus_minus_cortex_residual"].to_numpy(dtype=float)
     mean_val, p_exact, _, _ = exact_signflip_one_sample(vals)
     ax.set_title(
@@ -782,7 +782,7 @@ def draw_panel_a(ax, matched_diffs, tests):
 
 
 def draw_panel_b(ax, beta_delta_df):
-    # Region-wise Δβ dot plot: less line-heavy than the original fentanyl→propofol paired plot.
+    # 按区域绘制beta变化量点图，减少原芬太尼到丙泊酚配对图中的连线。 / Region-wise Δβ dot plot: less line-heavy than the original fentanyl→propofol paired plot.
     region_order = ["Cortex", "Thalamus"]
     region_colors = {"Cortex": COLORS["cortex"], "Thalamus": COLORS["thalamus"]}
     xmap = {"Cortex": 0, "Thalamus": 1}
@@ -864,17 +864,17 @@ def draw_panel_b(ax, beta_delta_df):
         y=1.145,
         pad=0,
     )
-    # Extra headroom keeps the highest observations and error bars below
-    # the mean/p annotations placed at the top of the axes.
+    # 增加顶部空间，使最高观测值和误差棒位于 / Extra headroom keeps the highest observations and error bars below
+    # 坐标轴顶部的均值及p值标注下方。 / the mean/p annotations placed at the top of the axes.
     set_padded_ylim(ax, all_vals, pad_frac=0.58, min_span=0.006)
     clean_ax(ax)
     return pd.DataFrame(stats)
 
 
 def draw_panel_c(ax, tests, diffs, ladder_models):
-    # Horizontal forest plot: one row per residualization model.
-    # Significance stars are placed at the right edge of each CI row,
-    # not above the points, to avoid collision with the title.
+    # 水平森林图：每个残差化模型占一行。 / Horizontal forest plot: one row per residualization model.
+    # 显著性星号置于各置信区间行的右端， / Significance stars are placed at the right edge of each CI row,
+    # 而非数据点上方，以免与标题碰撞。 / not above the points, to avoid collision with the title.
     rows = []
     for i, m in enumerate(ladder_models):
         gd = get_model_diff_values(diffs, m)
@@ -899,8 +899,8 @@ def draw_panel_c(ax, tests, diffs, ladder_models):
             "n_animals": n,
         })
 
-    # Set x-limits before placing stars, leaving a small right-side margin
-    # for significance markers.
+    # 放置星号前设置横轴范围，并在右侧留出小段空间 / Set x-limits before placing stars, leaving a small right-side margin
+    # 供显著性标记使用。 / for significance markers.
     vals_for_xlim = finite_values(
         [v for r in rows for v in r["vals"].tolist()]
         + [r["ci_lo"] for r in rows]
@@ -919,7 +919,7 @@ def draw_panel_c(ax, tests, diffs, ladder_models):
     x0, x1 = ax.get_xlim()
     xspan = x1 - x0
 
-    # Highlight the fully adjusted Ising-distance model row.
+    # 突出显示完全调整后的Ising距离模型行。 / Highlight the fully adjusted Ising-distance model row.
     if rows:
         final_y = rows[-1]["y"]
         ax.axhspan(final_y - 0.42, final_y + 0.42, color=COLORS["light"], zorder=-2)
@@ -954,8 +954,8 @@ def draw_panel_c(ax, tests, diffs, ladder_models):
                 zorder=5,
             )
 
-        # Keep the forest plot uncluttered; exact values are in the caption,
-        # text, and exported statistics table.
+        # 森林图保持简洁；精确数值见图注、 / Keep the forest plot uncluttered; exact values are in the caption,
+        # 正文及导出的统计表。 / text, and exported statistics table.
         star = p_star(r["p"])
         if star:
             ax.text(
@@ -978,7 +978,7 @@ def draw_panel_c(ax, tests, diffs, ladder_models):
 
 
 def draw_panel_d(ax, matched_diffs, tests, final_model):
-    """Panel d uses draw-averaged matched-channel values for the final model."""
+    """面板d使用最终模型的抽样平均匹配通道值。 / Panel d uses draw-averaged matched-channel values for the final model."""
     wide = get_model_diff_values(matched_diffs, final_model)
 
     for _, r in wide.iterrows():
@@ -1021,7 +1021,7 @@ def draw_panel_d(ax, matched_diffs, tests, final_model):
 
 
 # ============================================================
-# 4. Main
+# 4. 主程序。 / 4. Main
 # ============================================================
 
 def main():
@@ -1067,9 +1067,9 @@ def main():
         hspace=0.46,
     )
 
-    # Use an explicit empty middle column. This makes panel b narrower
-    # than panel a and creates a stable visual gap that is not consumed by
-    # panel b's long y-axis label.
+    # 显式设置空的中间列，使面板b比 / Use an explicit empty middle column. This makes panel b narrower
+    # 面板a窄，并形成稳定的视觉间距，避免 / than panel a and creates a stable visual gap that is not consumed by
+    # 被面板b较长的纵轴标签占用。 / panel b's long y-axis label.
     top = outer[0].subgridspec(
         1, 3,
         width_ratios=[1.05, 0.25, 0.95],
@@ -1092,9 +1092,9 @@ def main():
     forest_stats = draw_panel_c(ax_c, tests, diffs, ladder_models)
     adjusted_stats = draw_panel_d(ax_d, diffs, tests, final_model)
 
-    # Reviewer-requested animal-level statistics. These are kept separate from
-    # the plotting tables so the manuscript statistics are transparent and
-    # directly auditable.
+    # 审稿人要求的动物层面统计与 / Reviewer-requested animal-level statistics. These are kept separate from
+    # 绘图表分开保存，确保论文统计透明且 / the plotting tables so the manuscript statistics are transparent and
+    # 可直接核查。 / directly auditable.
     effect_stats, loo_stats, animal_contrasts = build_reviewer_requested_statistics(
         diffs, final_model
     )

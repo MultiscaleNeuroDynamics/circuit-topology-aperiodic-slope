@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Small controller for the read-only m=0.99 REAL/ER/DP statistics pipeline."""
+"""只读m=0.99 REAL/ER/DP统计流程的小型控制器。 / Small controller for the read-only m=0.99 REAL/ER/DP statistics pipeline."""
 
 import argparse
 from pathlib import Path

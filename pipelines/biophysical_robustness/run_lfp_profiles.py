@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Run five REAL/ER biophysical profiles on four endpoint trials (160 tasks)."""
+"""在四个端点试次上运行五组REAL/ER生物物理配置，共160项任务。 / Run five REAL/ER biophysical profiles on four endpoint trials (160 tasks)."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ def load_ee_set(path: Path):
 
 
 def read_spikes(path: Path, topology: str, ee_set: set[str]):
-    # Match the original table conventions: REAL may contain a header, ER is headerless.
+    # 遵循原表约定：REAL可能含表头，ER不含表头。 / Match the original table conventions: REAL may contain a header, ER is headerless.
     df = pd.read_csv(path, dtype=str) if topology == "REAL" else pd.read_csv(path, header=None, dtype=str)
     result, inhibitory = {}, {}
     for _, row in df.iterrows():

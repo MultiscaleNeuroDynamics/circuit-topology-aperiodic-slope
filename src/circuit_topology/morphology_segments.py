@@ -1,4 +1,4 @@
-"""Utilities for converting SWC morphologies to NEURON section segments."""
+"""将SWC形态转换为NEURON区段分段的工具。 / Utilities for converting SWC morphologies to NEURON section segments."""
 
 import numpy as np
 
@@ -7,11 +7,11 @@ import numpy as np
 TYPE_SOMA = 1
 TYPE_AXON = 2
 TYPE_DEND = 3
-# TYPE_APIC = 4
+# 已注释的顶树突类型常量定义。 / TYPE_APIC = 4
 
 
 def morph2Segs(swc_path, max_seg_len=20.0, allowed_types=(TYPE_DEND,)):
-    """Convert an SWC morphology into soma/dendrite segment arrays."""
+    """将SWC形态转换为胞体与树突分段数组。 / Convert an SWC morphology into soma/dendrite segment arrays."""
     data = np.loadtxt(swc_path)
     if data.ndim != 2 or data.shape[1] < 7:
         raise ValueError("SWC input must contain at least seven columns")
@@ -66,7 +66,7 @@ def morph2Segs(swc_path, max_seg_len=20.0, allowed_types=(TYPE_DEND,)):
     def get_segments(node_list, parentNode, parentSegment, segs, cons):
         seg_index = len(segs)
 
-        # seg: [parentNode] + advance_segment([node])
+        # 分段由父节点与递归推进得到的节点列表组成。 / seg: [parentNode] + advance_segment([node])
         seg_path = np.append(int(parentNode), advance_segment(np.array(node_list, dtype=int)))
         segs.append(seg_path)
         cons.append([int(parentSegment), int(seg_index)])
@@ -92,7 +92,7 @@ def morph2Segs(swc_path, max_seg_len=20.0, allowed_types=(TYPE_DEND,)):
     soma_mean = soma_nodes[:, 2:5].mean(axis=0)
     avg_soma_radius = float(np.mean(soma_nodes[:, 5])) if soma_nodes.shape[0] > 0 else 1.0
 
-    # Output handling.
+    # 输出处理。 / Output handling.
     soma_seg = np.array([
         0, 0, 0, avg_soma_radius / 2,
         avg_soma_radius / np.sqrt(3), avg_soma_radius / np.sqrt(3), avg_soma_radius / np.sqrt(3), avg_soma_radius / 2,
@@ -101,7 +101,7 @@ def morph2Segs(swc_path, max_seg_len=20.0, allowed_types=(TYPE_DEND,)):
 
     pts_list = [soma_seg]
 
-    # Paths and configuration.
+    # 路径与配置。 / Paths and configuration.
     for seg in segs:
         start_id = int(seg[0])
         end_id = int(seg[-1])
@@ -112,7 +112,7 @@ def morph2Segs(swc_path, max_seg_len=20.0, allowed_types=(TYPE_DEND,)):
         srow = id2row[start_id]
         erow = id2row[end_id]
 
-        c0 = data[srow, 2:6]  # x,y,z,r
+        c0 = data[srow, 2:6]  # 三维坐标x、y、z与半径r。 / x,y,z,r
         c1 = data[erow, 2:6]
         t0 = data[srow, 1]
         t1 = data[erow, 1]

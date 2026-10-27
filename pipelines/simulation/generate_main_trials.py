@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate the primary 100 paired MICrONS and ER dynamics trials."""
+"""生成主要的100个配对MICrONS与ER动力学试次。 / Generate the primary 100 paired MICrONS and ER dynamics trials."""
 
 import os
 import argparse
@@ -35,7 +35,7 @@ def ensure_dir(path):
 
 
 # =========================================================
-# Return-value details.
+# 返回值细节。 / Return-value details.
 # =========================================================
 def simulate_event_driven_branching(
     G,
@@ -89,15 +89,15 @@ def simulate_event_driven_branching(
 
     spike_times = []
 
-    # Statistical analysis.
+    # 统计分析。 / Statistical analysis.
     total_internal_parent_spikes_enqueue = 0
     total_internal_children_enqueued = 0
 
-    # Statistical analysis.
+    # 统计分析。 / Statistical analysis.
     internal_parent_spikes_actual = 0
     internal_child_spikes_actual  = 0
 
-    # Input handling.
+    # 输入处理。 / Input handling.
     t_full = np.arange(0, tmax_sec, dt)
     lam = external_rate * dt * 1324 * (1 - m0)
     exN_full = np.random.poisson(lam=lam, size=len(t_full))
@@ -175,7 +175,7 @@ def simulate_event_driven_branching(
                 spike_times.append((t_event, node))
                 next_available_time[node] = t_event + refractory_period
 
-                # Statistical analysis.
+                # 统计分析。 / Statistical analysis.
                 src = payload.get("src", None) if isinstance(payload, dict) else None
                 if src == "internal":
                     internal_child_spikes_actual += 1
@@ -251,7 +251,7 @@ def bin_counts_E(spike_times_E, dt, t_start, t_end, N_E):
 
 
 # =========================================================
-# Statistical analysis.
+# 统计分析。 / Statistical analysis.
 # =========================================================
 def bin_spikes_per_node(spike_times, N, dt, t_start, t_end):
     n_bins = int(np.floor((t_end - t_start) / dt))
@@ -267,7 +267,7 @@ def bin_spikes_per_node(spike_times, N, dt, t_start, t_end):
 
 
 # =========================================================
-# Build task inputs.
+# 构建任务输入。 / Build task inputs.
 # =========================================================
 def build_microns_EE_EI_IE_matrices():
     celltype_path = DATA_ROOT / "proofread_cells_celltypes_auto.csv"
@@ -317,7 +317,7 @@ def build_microns_EE_EI_IE_matrices():
     if len(region_ids) == 0:
         raise RuntimeError("No MICrONS cells fall inside the configured spatial patch.")
 
-    # ---------------- E→E ----------------
+    # 兴奋到兴奋连接。 / ---------------- E→E ----------------
     syn_ee = syn[
         (syn["pre_class"] == "excitatory_neuron") &
         (syn["post_class"] == "excitatory_neuron") &
@@ -338,11 +338,11 @@ def build_microns_EE_EI_IE_matrices():
 
     W_EE = np.zeros((N_E, N_E), dtype=float)
     for row in syn_ee.itertuples(index=False):
-        i = e_id_to_idx[row.post_pt_root_id]  # post row
-        j = e_id_to_idx[row.pre_pt_root_id]   # pre col
+        i = e_id_to_idx[row.post_pt_root_id]  # 行表示突触后节点。 / post row
+        j = e_id_to_idx[row.pre_pt_root_id]   # 列表示突触前节点。 / pre col
         W_EE[i, j] += row.weight
 
-    # ---------------- E→I ----------------
+    # 兴奋到抑制连接。 / ---------------- E→I ----------------
     syn_ei = syn[
         (syn["pre_class"] == "excitatory_neuron") &
         (syn["post_class"] == "inhibitory_neuron") &
@@ -374,8 +374,8 @@ def build_microns_EE_EI_IE_matrices():
         syn_ei["weight"] = 1.0
         W_EI = np.zeros((N_I, N_E), dtype=float)
         for row in syn_ei.itertuples(index=False):
-            pre_id = row.pre_pt_root_id   # E
-            post_id = row.post_pt_root_id # I
+            pre_id = row.pre_pt_root_id   # 兴奋性。 / E
+            post_id = row.post_pt_root_id # 抑制性。 / I
             if pre_id not in e_id_to_idx or post_id not in i_id_to_idx:
                 continue
             i = i_id_to_idx[post_id]
@@ -388,24 +388,24 @@ def build_microns_EE_EI_IE_matrices():
         syn_ie["weight"] = 1.0
         W_IE = np.zeros((N_E, N_I), dtype=float)
         for row in syn_ie.itertuples(index=False):
-            pre_id = row.pre_pt_root_id   # I
-            post_id = row.post_pt_root_id # E
+            pre_id = row.pre_pt_root_id   # 抑制性。 / I
+            post_id = row.post_pt_root_id # 兴奋性。 / E
             if post_id not in e_id_to_idx or pre_id not in i_id_to_idx:
                 continue
             e = e_id_to_idx[post_id]
             i = i_id_to_idx[pre_id]
             W_IE[e, i] += row.weight
 
-    # Statistical analysis.
-    # print("N_E =", N_E, "  E→E edges =", int(np.count_nonzero(W_EE)), "  sum(E→E) =", int(W_EE[W_EE > 0].sum()))
-    # print("N_I =", N_I, "  E→I edges =", int(np.count_nonzero(W_EI)), "  sum(E→I) =", int(W_EI[W_EI > 0].sum()) if W_EI.size else 0)
-    # print("N_I =", N_I, "  I→E edges =", int(np.count_nonzero(W_IE)), "  sum(I→E) =", int(W_IE[W_IE > 0].sum()) if W_IE.size else 0)
+    # 统计分析。 / Statistical analysis.
+    # 已注释的诊断输出：兴奋细胞数、兴奋到兴奋边数及权重总和。 / print("N_E =", N_E, "  E→E edges =", int(np.count_nonzero(W_EE)), "  sum(E→E) =", int(W_EE[W_EE > 0].sum()))
+    # 已注释的诊断输出：抑制细胞数、兴奋到抑制边数及权重总和。 / print("N_I =", N_I, "  E→I edges =", int(np.count_nonzero(W_EI)), "  sum(E→I) =", int(W_EI[W_EI > 0].sum()) if W_EI.size else 0)
+    # 已注释的诊断输出：抑制细胞数、抑制到兴奋边数及权重总和。 / print("N_I =", N_I, "  I→E edges =", int(np.count_nonzero(W_IE)), "  sum(I→E) =", int(W_IE[W_IE > 0].sum()) if W_IE.size else 0)
 
     return W_EE, W_EI, W_IE, ee_ids, i_ids
 
 
 # =========================================================
-# Synapse-processing details.
+# 突触处理细节。 / Synapse-processing details.
 # =========================================================
 def build_ER_control_uniform_synapses(W_real, seed=None):
     if seed is not None:
@@ -466,7 +466,7 @@ def build_ER_control_uniform_synapses(W_real, seed=None):
 
 
 # =========================================================
-# Synapse-processing details.
+# 突触处理细节。 / Synapse-processing details.
 # =========================================================
 def build_ER_IE_uniform_synapses(N_I, N_E, num_edges, total_syn, seed=None):
     if seed is not None:
@@ -479,7 +479,7 @@ def build_ER_IE_uniform_synapses(N_I, N_E, num_edges, total_syn, seed=None):
     if num_edges > max_edges:
         raise ValueError(f"num_edges ({num_edges}) exceeds N_I*N_E ({max_edges}).")
 
-    # Reproducible randomization detail.
+    # 可重复随机化细节。 / Reproducible randomization detail.
     all_pairs_idx = np.random.choice(max_edges, size=num_edges, replace=False)
     i_idx = (all_pairs_idx // N_E).astype(int)
     e_idx = (all_pairs_idx % N_E).astype(int)
@@ -593,7 +593,7 @@ def generate_ER_I_spikes_by_E_bins(
         if nI <= 0:
             continue
 
-        # Neuron-processing details.
+        # 神经元处理细节。 / Neuron-processing details.
         chosen_i = np.random.choice(N_I, size=int(nI), replace=True)
 
         t0 = t_start + k * dt
@@ -605,7 +605,7 @@ def generate_ER_I_spikes_by_E_bins(
 
 
 # =========================================================
-# Save generated output.
+# 保存生成的输出。 / Save generated output.
 # =========================================================
 def save_spikes_ms_csv_from_dict(spikes_by_id, out_path):
     ensure_dir(out_path)
@@ -639,13 +639,13 @@ def build_spike_dict_from_spike_times(spike_times, id_list, id_offset=0):
 
 
 # =========================================================
-# Save generated output.
+# 保存生成的输出。 / Save generated output.
 # =========================================================
 def save_er_edges_weights_EE(W_er, out_path):
     ensure_dir(out_path)
     rows, cols = np.nonzero(W_er)
-    pre = cols.astype(int)    # pre=j
-    post = rows.astype(int)   # post=i
+    pre = cols.astype(int)    # 突触前索引为j。 / pre=j
+    post = rows.astype(int)   # 突触后索引为i。 / post=i
     w = W_er[rows, cols].astype(int)
     df = pd.DataFrame({"pre_id": pre, "post_id": post, "weight": w})
     df.to_csv(out_path, index=False)
@@ -654,7 +654,7 @@ def save_er_edges_weights_EE(W_er, out_path):
 
 def save_er_edges_weights_IE(W_IE_er, I_id_offset, out_path):
     ensure_dir(out_path)
-    rows, cols = np.nonzero(W_IE_er)  # rows=E, cols=I
+    rows, cols = np.nonzero(W_IE_er)  # 行表示兴奋细胞，列表示抑制细胞。 / rows=E, cols=I
     post_E = rows.astype(int)
     pre_I = (cols.astype(int) + int(I_id_offset))
     w = W_IE_er[rows, cols].astype(int)
@@ -677,13 +677,13 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
     real_w = W_EE_real[W_EE_real > 0].ravel()
     rho_real, _ = spectral_radius(W_EE_real, name=f"MICRONS_EE_trial{trial_idx:04d}")
 
-    # Statistical analysis.
+    # 统计分析。 / Statistical analysis.
     N_E = W_EE_real.shape[0]
     N_I_real = W_IE_real.shape[1]
     num_IE_edges_real = int(np.count_nonzero(W_IE_real))
     total_IE_syn_real = int(W_IE_real[W_IE_real > 0].sum()) if W_IE_real.size else 0
 
-    # Build task inputs.
+    # 构建任务输入。 / Build task inputs.
     W_er = build_ER_control_uniform_synapses(W_EE_real, seed=10000 + trial_idx)
     er_w = W_er[W_er > 0].ravel()
     rho_er, _ = spectral_radius(W_er, name=f"ER_EE_trial{trial_idx:04d}")
@@ -717,13 +717,13 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
     )
 
     # =====================================================
-    # Build task inputs.
+    # 构建任务输入。 / Build task inputs.
     # =====================================================
     if N_I_real <= 0:
         spikes_er_I = []
         W_IE_er = np.zeros((N_E, 0), dtype=int)
     else:
-        # Statistical analysis.
+        # 统计分析。 / Statistical analysis.
         t_centers, E_bin = bin_counts_E(
             spikes_er_E, dt=dt, t_start=warmup_time, t_end=tmax_sec, N_E=N_E
         )
@@ -737,7 +737,7 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
             seed=3000 + trial_idx
         )
 
-        # Build task inputs.
+        # 构建任务输入。 / Build task inputs.
         W_IE_er = build_ER_IE_uniform_synapses(
             N_I=N_I_real,
             N_E=N_E,
@@ -747,7 +747,7 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
         )
 
     # =====================================================
-    # Output handling.
+    # 输出处理。 / Output handling.
     # =====================================================
     t_real, B_real = compute_branching_series(spikes_real_E, bin_size=dt, warmup_time=warmup_time)
     t_er,   B_er   = compute_branching_series(spikes_er_E,   bin_size=dt, warmup_time=warmup_time)
@@ -784,7 +784,7 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
         print(f"[trial {trial_idx:04d}] diagnostic plot failed: {e}")
 
     # =====================================================
-    # Save generated output.
+    # 保存生成的输出。 / Save generated output.
     # =====================================================
     out_real_spk = os.path.join(trial_dir, "microns_patch_spikes_real_ms.csv")
     out_er_spk   = os.path.join(trial_dir, "microns_patch_spikes_ER_ms.csv")
@@ -792,16 +792,16 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
     out_er_ie_w  = os.path.join(trial_dir, "microns_patch_edges_ER_IE_weights.csv")
 
     # =====================================================
-    # Save generated output.
+    # 保存生成的输出。 / Save generated output.
     # =====================================================
-    neuron_spikes_real = {}  # key: pt_root_id, value: list[t_sec]
+    neuron_spikes_real = {}  # 键为pt_root_id，值为秒单位的时间列表。 / key: pt_root_id, value: list[t_sec]
 
     for t_sec, node_idx in spikes_real_E:
         pt_id = int(ee_ids[int(node_idx)])
         neuron_spikes_real.setdefault(pt_id, []).append(float(t_sec))
 
     if W_EI_real is not None and W_EI_real.size > 0 and len(i_ids) > 0:
-        # Statistical analysis.
+        # 统计分析。 / Statistical analysis.
         t_E, B_E_node = bin_spikes_per_node(
             spikes_real_E,
             N=N_E,
@@ -810,21 +810,21 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
             t_end=tmax_sec
         )
 
-        # raw_I[t, i] = sum_j B_E_node[t, j] * W_EI[i, j]
-        raw_I = B_E_node @ W_EI_real.T   # (T, N_I)
+        # 按兴奋到抑制权重对兴奋节点活动求和，得到抑制输入。 / raw_I[t, i] = sum_j B_E_node[t, j] * W_EI[i, j]
+        raw_I = B_E_node @ W_EI_real.T   # 形状为时间点数乘以抑制细胞数。 / (T, N_I)
 
 
 
-        E_sum_t = B_E_node.sum(axis=1)      # (T,)
-        I_raw_sum_t = raw_I.sum(axis=1)     # (T,)
+        E_sum_t = B_E_node.sum(axis=1)      # 形状为时间点数的一维数组。 / (T,)
+        I_raw_sum_t = raw_I.sum(axis=1)     # 形状为时间点数的一维数组。 / (T,)
 
         scale_t = np.zeros_like(E_sum_t, dtype=float)
         mask_nonzero = I_raw_sum_t > 0
         scale_t[mask_nonzero] = (EI_ratio * E_sum_t[mask_nonzero]) / I_raw_sum_t[mask_nonzero]
 
-        I_scaled = raw_I * scale_t[:, None]  # (T, N_I)
+        I_scaled = raw_I * scale_t[:, None]  # 形状为时间点数乘以抑制细胞数。 / (T, N_I)
 
-        rng = np.random.default_rng(5000 + trial_idx)  # Reproducible randomization detail.
+        rng = np.random.default_rng(5000 + trial_idx)  # 可重复随机化细节。 / Reproducible randomization detail.
         T_bins, N_I_tmp = I_scaled.shape
         if N_I_tmp == len(i_ids):
             for kbin in range(T_bins):
@@ -849,7 +849,7 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
     else:
         pass
 
-    # Save generated output.
+    # 保存生成的输出。 / Save generated output.
     save_spikes_ms_csv_from_dict(neuron_spikes_real, out_real_spk)
 
     I_id_offset = N_E
@@ -873,7 +873,7 @@ def run_one_trial(trial_idx: int, base_out_dir: str,
         print(f"[trial {trial_idx:04d}] no ER I-to-E edges; table not written: {out_er_ie_w}")
 
     # =====================================================
-    # Save generated output.
+    # 保存生成的输出。 / Save generated output.
     # =====================================================
     summary_path = os.path.join(trial_dir, "summary.txt")
     with open(summary_path, "w", encoding="utf-8") as f:
@@ -950,8 +950,8 @@ import numpy as np
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
-# def _worker_run_one_trial(kwargs):
-#     return run_one_trial(**kwargs)
+# 已注释的单试次工作函数定义。 / def _worker_run_one_trial(kwargs):
+# 已注释的调用：展开关键字参数并返回单试次结果。 / return run_one_trial(**kwargs)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -972,7 +972,7 @@ if __name__ == "__main__":
 
     EI_ratios = np.linspace(EI_min, EI_max, N_RUNS, dtype=float)
 
-    # Configuration.
+    # 配置。 / Configuration.
     USE_THREADS = False
     max_workers = int(args.max_workers)
     Executor = ThreadPoolExecutor if USE_THREADS else ProcessPoolExecutor
@@ -1003,7 +1003,7 @@ if __name__ == "__main__":
                 Areal=1.19116,
                 Aer=1.030544,
                 EI_ratio=ei_local,
-                # Return-value details.
+                # 返回值细节。 / Return-value details.
                 show_plot=False
             )
 

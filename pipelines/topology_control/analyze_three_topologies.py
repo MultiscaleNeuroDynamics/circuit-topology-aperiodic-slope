@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Read-only m=0.99 REAL/ER/DP LFP + E/I analysis for the matched 40 trials."""
+"""对匹配的40试次执行只读m=0.99 REAL/ER/DP LFP及兴奋/抑制比分析。 / Read-only m=0.99 REAL/ER/DP LFP + E/I analysis for the matched 40 trials."""
 
 from __future__ import annotations
 
@@ -63,13 +63,13 @@ def locate_lfp(root: Path, trial_id: int, layer: str) -> Path | None:
     candidates = (base / "_lfp.npy", base / layer / "_lfp.npy")
     valid = [p for p in candidates if p.is_file() and p.stat().st_size > 0]
     if len(valid) > 1:
-        # Prefer the double-layer layout used by the current simulators.
+        # 优先采用当前模拟器使用的双层目录结构。 / Prefer the double-layer layout used by the current simulators.
         return candidates[1]
     return valid[0] if valid else None
 
 
 def choose_lfp_root(explicit: str | None, candidates: list[Path], topology: str) -> Path:
-    """Select the first candidate containing the first matched trial/layer LFP."""
+    """选择包含第一个匹配试次和皮层层LFP的首个候选路径。 / Select the first candidate containing the first matched trial/layer LFP."""
     if explicit:
         return Path(explicit).resolve()
     for candidate in candidates:
@@ -143,7 +143,7 @@ def fit_one_lfp(layer_paths: list[Path], save_plot: Path | None = None):
     fs_in = 1000.0 / dt_ms
     signal = np.sum(np.vstack([x[:n] for x in signals]), axis=0)
 
-    # Preserve the settings used for the revised 1--100 Hz manuscript analysis.
+    # 保留修订论文1至100 Hz分析所用设置。 / Preserve the settings used for the revised 1--100 Hz manuscript analysis.
     nyquist = fs_in / 2.0
     if nyquist <= 120.0:
         raise ValueError(f"Sampling rate {fs_in:g} Hz is too low for the 120-Hz prefilter")
@@ -376,9 +376,9 @@ def main():
     args = parse_args()
     project = Path(args.project_root).resolve()
     allen = project / "ALLEN"
-    # Original manuscript m=0.99 outputs predate the m-specific directory and
-    # normally live directly under ALLEN/save.  The second candidates retain
-    # compatibility with later directory layouts.
+    # 原论文m=0.99输出早于按m划分的目录， / Original manuscript m=0.99 outputs predate the m-specific directory and
+    # 通常直接位于ALLEN/save；第二组候选路径 / normally live directly under ALLEN/save.  The second candidates retain
+    # 保持与后续目录结构兼容。 / compatibility with later directory layouts.
     lfp_roots = {
         "REAL": choose_lfp_root(args.real_lfp_root, [
             allen / "save" / "final_real",

@@ -32,7 +32,7 @@ SELECT_SWC_ROOT = os.environ.get(
     os.path.join(ALLEN_ROOT, "file", "select_swc")
 )
 
-# File-handling details.
+# 文件处理细节。 / File-handling details.
 LAYER_TO_FOLDER = {
     "L2/3": "L2_3",
     "L4": "L4",
@@ -102,13 +102,13 @@ def main(seed: int = 0):
             print(f"[SKIP] {os.path.basename(outdir)}: SWCs and REAL maps already complete")
             continue
 
-        # Deterministic per-trial selection: corresponding trials in both m
-        # conditions receive the same SWCs, even when earlier trials are skipped.
+        # 确定性的逐试次选择：即使跳过前面已完成的试次，两个m / Deterministic per-trial selection: corresponding trials in both m
+        # 条件中相对应的试次仍获得相同SWC形态。 / conditions receive the same SWCs, even when earlier trials are skipped.
         match = re.search(r"ER_trial(\d+)$", os.path.basename(outdir))
         trial_number = int(match.group(1)) if match else 0
         rng = random.Random(seed + trial_number)
 
-        # Reproducible randomization detail.
+        # 可重复随机化细节。 / Reproducible randomization detail.
         SWC_PATHS = {}
         picked = {}
         for layer in ["L2/3", "L4", "L5", "L6"]:
@@ -116,7 +116,7 @@ def main(seed: int = 0):
             SWC_PATHS[layer] = swc_path
             picked[layer] = swc_path
 
-        # Paths and configuration.
+        # 路径与配置。 / Paths and configuration.
         build_clean_synapse_segment_maps(
             PATCH_DIR,
             SWC_PATHS,

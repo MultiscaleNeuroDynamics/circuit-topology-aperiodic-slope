@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate the 40-trial m=0.99 degree-preserving (DP) control.
+"""生成40试次、m=0.99的保持度数DP对照。保留原1至100试次标识符，选取约等间距的40个标识符，复用相应兴奋/抑制比，独立搜索测得m_eff匹配论文目标的实现，并将DP结果写入独立目录树。下游旧脚本将随机对照称为ER；为避免改动已验证的NEURON代码，DP目录内使用历史*_ER_*兼容文件名，但其数据为DP，记录于dp_metadata.json和输出根目录名。 / Generate the 40-trial m=0.99 degree-preserving (DP) control.
 
 This script deliberately keeps the original 1..100 trial identifiers.  It
 selects 40 approximately equally spaced identifiers, reuses the corresponding
@@ -35,8 +35,8 @@ DEFAULT_PROJECT_ROOT = Path(
 )
 DEFAULT_ALLEN_ROOT = Path(os.environ.get("ALLEN_ROOT", DEFAULT_PROJECT_ROOT / "ALLEN"))
 
-# np.rint(np.linspace(1, 100, 40)).  These are original manuscript trial IDs,
-# not newly assigned 1..40 identifiers.
+# 按等间距取整选择原论文试次标识符， / np.rint(np.linspace(1, 100, 40)).  These are original manuscript trial IDs,
+# 而非重新赋予1至40的标识符。 / not newly assigned 1..40 identifiers.
 SELECTED_TRIAL_IDS = (
     1, 4, 6, 9, 11, 14, 16, 19, 21, 24,
     26, 29, 31, 34, 37, 39, 42, 44, 47, 49,
@@ -62,7 +62,7 @@ def load_manuscript_module():
 
 
 def _edge_list_from_matrix(W: np.ndarray):
-    """Return [pre, post, weight] rows for W[post, pre]."""
+    """返回W[post, pre]对应的突触前、突触后及权重三列记录。 / Return [pre, post, weight] rows for W[post, pre]."""
     posts, pres = np.nonzero(W)
     return [
         [int(pre), int(post), float(W[post, pre])]
@@ -76,7 +76,7 @@ def degree_preserving_rewire(
     nswap_factor: int = 20,
     allow_self_loops: bool = False,
 ):
-    """Directed double-edge swap for W[post, pre].
+    """对W[post, pre]实施有向双边交换，将u→v与x→y改为u→y与x→v，保持每个节点的二值入度和出度。将权重保留于来源边，同时保持每个源节点的总出强度、突触总数及全局连接重数分布。 / Directed double-edge swap for W[post, pre].
 
     A swap (u->v, x->y) -> (u->y, x->v) preserves every node's binary
     in-degree and out-degree.  Keeping each weight with its source edge also
@@ -151,7 +151,7 @@ def calibrate_A_for_dp(
     max_iterations: int = 12,
     max_expansions: int = 6,
 ):
-    """Calibrate DP A in memory; never create an A_calibration directory.
+    """在内存中校准DP的A，不创建A_calibration目录。遵循m=0.90/0.95代码的安全单侧过程：各候选值使用相同五个种子，以测得m_eff的中位数为目标，A可从1.19116降低但不能增大。 / Calibrate DP A in memory; never create an A_calibration directory.
 
     This mirrors the safe one-sided procedure used by the m=0.90/0.95 code:
     each candidate is evaluated with the same five seeds, the median measured
@@ -278,8 +278,8 @@ def calibrate_A_for_dp(
     if selected_A > float(initial_A) + 1e-12:
         raise RuntimeError("DP calibration attempted to increase A above initial value")
 
-    # Files are written directly in m_0.99_DP40.  No A_calibration directory
-    # and no fake trial directory are created.
+    # 文件直接写入m_0.99_DP40，不创建A_calibration目录， / Files are written directly in m_0.99_DP40.  No A_calibration directory
+    # 也不创建虚构试次目录。 / and no fake trial directory are created.
     pd.DataFrame(history).to_csv(history_path, index=False, encoding="utf-8-sig")
     selected = {
         "target_m": target_m,
@@ -324,7 +324,7 @@ def find_original_trial_root(allen_root: Path, explicit: str | None):
 
 
 def build_microns_matrices(module, allen_root: Path):
-    """Run the original matrix builder after safely redirecting its three paths.
+    """安全重定向三个路径后运行原始矩阵构建器。论文函数含硬编码路径；仅在内存中替换临时函数副本中的字面路径赋值，不编辑论文文件本身。 / Run the original matrix builder after safely redirecting its three paths.
 
     The manuscript function contains hard-coded paths.  We execute a temporary
     function clone with only those literal path assignments replaced in memory;
@@ -380,7 +380,7 @@ def copy_trial_assets(original_trial: Path, output_trial: Path):
 
 
 def read_original_trial_settings(original_trial: Path, trial_id: int):
-    """Read the manuscript E/I ratio; reconstruct its exact grid value if needed."""
+    """读取论文兴奋/抑制比，必要时重建其精确网格值。 / Read the manuscript E/I ratio; reconstruct its exact grid value if needed."""
     settings = {}
     summary = original_trial / "summary.txt"
     if summary.is_file():
@@ -441,8 +441,8 @@ def run_one_dp_trial(task):
     n_e = int(W_EE.shape[0])
     n_i = int(W_IE.shape[1]) if W_IE.ndim == 2 else 0
 
-    # Topology randomization is reproducible, but dynamical seeds are deliberately
-    # independent from REAL: comparison is matched on measured m_eff, not seed.
+    # 拓扑随机化可重复，但动力学种子有意 / Topology randomization is reproducible, but dynamical seeds are deliberately
+    # 独立于REAL：比较按测得的m_eff匹配，而非按种子匹配。 / independent from REAL: comparison is matched on measured m_eff, not seed.
     topology_seed_ee = 10000 + trial_id
     topology_seed_ie = 4000 + trial_id
     W_EE_dp, swaps_ee, attempts_ee = degree_preserving_rewire(
@@ -499,8 +499,8 @@ def run_one_dp_trial(task):
         seed=3000 + trial_id,
     )
 
-    # Compatibility names: downstream validated ER scripts operate only inside
-    # the isolated DP root, so existing REAL/ER manuscript files cannot be touched.
+    # 兼容命名：下游已验证的ER脚本仅在 / Compatibility names: downstream validated ER scripts operate only inside
+    # 独立DP根目录内运行，因此不会触及已有REAL/ER论文文件。 / the isolated DP root, so existing REAL/ER manuscript files cannot be touched.
     save_spike_dict(
         module, spikes_dp_e, spikes_dp_i, n_e, n_i,
         trial_out / "microns_patch_spikes_ER_ms.csv",
@@ -598,8 +598,8 @@ def main():
     output_root.mkdir(parents=True, exist_ok=True)
 
     if args.A_dp is None:
-        # Calibrate on one deterministic representative DP topology before any
-        # formal trial is generated.  Nothing is written into a trial folder.
+        # 正式生成试次前，在一个确定性的代表性DP拓扑上校准， / Calibrate on one deterministic representative DP topology before any
+        # 不向试次文件夹写入任何内容。 / formal trial is generated.  Nothing is written into a trial folder.
         manuscript = load_manuscript_module()
         W_EE, _, _, _, _ = build_microns_matrices(manuscript, allen_root)
         W_cal_dp, _, _ = degree_preserving_rewire(

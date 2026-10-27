@@ -1,11 +1,11 @@
-# Generated simulations and analyses
+# 生成的模拟和分析结果 / Generated simulations and analyses
 work/
 outputs/
 
-# External raw data are downloaded separately
+# 外部原始数据单独下载 / External raw data are downloaded separately
 data/external/ds003380/
 
-# Compiled NEURON mechanisms
+# 编译后的NEURON机制 / Compiled NEURON mechanisms
 mechanisms/x86_64/
 mechanisms/arm64/
 mechanisms/nrnmech.dll
@@ -14,7 +14,7 @@ mechanisms/*.c
 mechanisms/*.cpp
 mechanisms/special*
 
-# Python and editor artifacts
+# Python及编辑器生成的文件 / Python and editor artifacts
 __pycache__/
 *.py[cod]
 .pytest_cache/

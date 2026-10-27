@@ -2,17 +2,17 @@ TITLE Cortical Muscarinic current
 
 COMMENT
 -----------------------------------------------------------------------------
-	Muscarinic potassium current
+	毒蕈碱型钾电流 / Muscarinic potassium current
 	----------------------------
 
-  - noninactivating K+ current responsible for the adaptation of firing rate 
-    and the afterhyperpolarization (AHP) of cortical pyramidal cells
+  非失活钾电流，参与放电频率适应 / - noninactivating K+ current responsible for the adaptation of firing rate 
+    以及皮层锥体细胞的后超极化（AHP） / and the afterhyperpolarization (AHP) of cortical pyramidal cells
 
-  - differential equations (HH-like)
+  类似HH模型的微分方程 / - differential equations (HH-like)
 
-  Model from Mainen, Z.M. and Sejnowski, T.J., 1996
+  模型来源：Mainen与Sejnowski，1996年 / Model from Mainen, Z.M. and Sejnowski, T.J., 1996
 
-  Written by Alain Destexhe, Laval University, 1996
+  作者Alain Destexhe，拉瓦尔大学，1996年 / Written by Alain Destexhe, Laval University, 1996
 -----------------------------------------------------------------------------
 ENDCOMMENT
 
@@ -65,7 +65,7 @@ DERIVATIVE states {
 UNITSOFF
 INITIAL {
 :
-:  The Q10 value is assumed to be 2.3
+: Q10值假设为2.3 / The Q10 value is assumed to be 2.3
 :
         tadj = 2.3 ^ ((celsius-23)/10)
 	evaluate_fct(v)

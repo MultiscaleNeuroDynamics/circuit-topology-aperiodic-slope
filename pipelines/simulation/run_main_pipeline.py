@@ -1,4 +1,4 @@
-"""Restart-safe controller for the 100-trial primary simulation pipeline.
+"""主要100试次模拟流程的支持续跑控制器。生成动力学，构建形态和突触输入，并可选启动高成本NEURON/LFP模拟；不覆盖已有完整输出。 / Restart-safe controller for the 100-trial primary simulation pipeline.
 
 The controller generates dynamics, constructs morphology/synapse inputs, and
 optionally launches the expensive NEURON/LFP simulations. Existing complete

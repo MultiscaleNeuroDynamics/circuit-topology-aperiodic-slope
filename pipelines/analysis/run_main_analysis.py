@@ -1,4 +1,4 @@
-"""Run the primary E/I, spectral, regression, and subset-validation analyses."""
+"""运行主要兴奋/抑制比、频谱、回归和子集验证分析。 / Run the primary E/I, spectral, regression, and subset-validation analyses."""
 
 from __future__ import annotations
 

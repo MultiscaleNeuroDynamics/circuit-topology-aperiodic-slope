@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Run and validate the complete post-dynamics pipeline for m=0.90 and 0.95."""
+"""运行并验证m=0.90和0.95的完整动力学后处理流程。 / Run and validate the complete post-dynamics pipeline for m=0.90 and 0.95."""
 
 import argparse
 import os
@@ -114,7 +114,7 @@ def validate_project_dependencies():
 
 
 def expected_lfp_candidates(save_root: Path, expected_trials=40):
-    """Return the current and legacy output paths for every simulation task."""
+    """返回每项模拟任务的当前及历史输出路径。 / Return the current and legacy output paths for every simulation task."""
     return [
         (
             save_root / f"ER_trial{trial_idx:04d}" / layer / "_lfp.npy",
@@ -160,7 +160,7 @@ def lfp_tree_status(save_root: Path, expected_trials=40):
 
 def run_neuron_stage_without_overwrite(
         save_root: Path, script_key: str, stage: str, env, expected_trials=40):
-    """Resume a NEURON stage without replacing current or legacy outputs."""
+    """续跑NEURON阶段，不替换当前或历史输出。 / Resume a NEURON stage without replacing current or legacy outputs."""
     complete_count, expected_count, empty = lfp_tree_status(save_root, expected_trials)
     if complete_count == expected_count and not empty:
         print(f"[SKIP stage] all {expected_count} {stage} _lfp.npy files already exist")
@@ -171,8 +171,8 @@ def run_neuron_stage_without_overwrite(
             f"{[str(path) for path in empty[:10]]}"
         )
 
-    # Current simulators skip the direct path. For a result produced by an older
-    # double-layer layout, create a temporary direct symlink so it is also skipped.
+    # 当前模拟器跳过直接路径；对于旧版双层目录结果， / Current simulators skip the direct path. For a result produced by an older
+    # 创建临时直接符号链接，使其也被跳过。 / double-layer layout, create a temporary direct symlink so it is also skipped.
     created_links = []
     try:
         for direct_path, legacy_path in expected_lfp_candidates(save_root, expected_trials):
@@ -266,7 +266,7 @@ def main():
             run_script("synapse_spikes", env)
         validate_files(root, SYNAPSE_SPIKES, "synapse spike tables")
 
-        # NaN cleaning is marker-aware and only rewrites files that are new or changed.
+        # NaN清理识别标记，仅重写新增或变更的文件。 / NaN cleaning is marker-aware and only rewrites files that are new or changed.
         run_script("clean_nan", env)
         validate_files(root, SYNAPSE_SPIKES, "cleaned synapse spike tables")
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate calibrated 40-trial robustness datasets at m=0.90 and m=0.95.
+"""生成m=0.90和m=0.95下校准后的40试次稳健性数据集。事件驱动动力学、MICrONS矩阵构建、ER对照及试次写入函数均导入自主生成器，使所有工作点共享同一实现；本模块仅增加工作点增益校准和条件层面的调度。 / Generate calibrated 40-trial robustness datasets at m=0.90 and m=0.95.
 
 The event-driven dynamics, MICrONS matrix construction, ER control, and trial
 writer are imported from the primary generator so all operating points share
@@ -34,7 +34,7 @@ from pipelines.simulation.generate_main_trials import (
 
 
 def _worker_run_one_trial(kwargs):
-    """Execute one shared dynamics trial in a process-pool worker."""
+    """在进程池工作进程中执行一个共享动力学试次。 / Execute one shared dynamics trial in a process-pool worker."""
     return run_one_trial(**kwargs)
 
 
@@ -45,7 +45,7 @@ def calibrate_A_for_target_m(
         max_iterations=12,
         initial_relative_span=0.20,
         max_expansions=6):
-    """
+    """校准rho_eff=rho/A中的A，使测得的m_eff中位数接近target_m；各候选A使用相同固定种子。为安全起见仅单侧搜索，A可从原值降低但不得超过initial_A。m_eff通常随A单调增加，因此获得有效区间后使用二分法，并返回完整搜索历史。 / 
     Calibrate A in rho_eff=rho/A so that the median measured m_eff is close
     to target_m. Candidate A values are evaluated with identical fixed seeds.
 
@@ -107,14 +107,14 @@ def calibrate_A_for_target_m(
         )
         return row
 
-    # Safety constraint: never increase A above the value calibrated for m=0.99.
+    # 安全约束：A不得超过m=0.99校准得到的数值。 / Safety constraint: never increase A above the value calibrated for m=0.99.
     low_A = max(1e-8, float(initial_A) * (1.0 - initial_relative_span))
     high_A = float(initial_A)
     low = evaluate(low_A)
     high = evaluate(high_A)
 
-    # If needed, expand downward only. Never increase above initial_A because
-    # a larger A increases g_branch=m0*A/rho and may approach supercriticality.
+    # 必要时仅向下扩展搜索，不得超过initial_A，因为 / If needed, expand downward only. Never increase above initial_A because
+    # 更大的A会增大g_branch=m0*A/rho，并可能接近超临界状态。 / a larger A increases g_branch=m0*A/rho and may approach supercriticality.
     expansions = 0
     while expansions < max_expansions:
         low_y = low["median_meff"]
@@ -181,7 +181,7 @@ def calibrate_real_and_er_A(target_m, initial_Areal, initial_Aer,
                             tmax_sec, dt, warmup_time,
                             refractory_period, external_rate,
                             syn_delay_mean):
-    """Calibrate REAL and ER A values on fixed representative networks."""
+    """在固定代表性网络上校准REAL和ER的A值。 / Calibrate REAL and ER A values on fixed representative networks."""
     os.makedirs(calibration_dir, exist_ok=True)
 
     W_EE_real, _, _, _, _ = build_microns_EE_EI_IE_matrices()
@@ -200,7 +200,7 @@ def calibrate_real_and_er_A(target_m, initial_Areal, initial_Aer,
         syn_delay_mean=syn_delay_mean,
     )
 
-    # Fixed seeds make every candidate A directly comparable.
+    # 固定种子使所有候选A可直接比较。 / Fixed seeds make every candidate A directly comparable.
     real_seeds = [91001, 91002, 91003, 91004, 91005]
     er_seeds = [92001, 92002, 92003, 92004, 92005]
 
@@ -242,8 +242,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     base_out_root = str(args.output_root.resolve())
 
-    # Sensitivity conditions: m=0.90 and m=0.95, 40 trials per condition.
-    # The same 40 evenly spaced E/I ratios are used for both m conditions.
+    # 敏感性条件：m=0.90和m=0.95，每个条件40个试次。 / Sensitivity conditions: m=0.90 and m=0.95, 40 trials per condition.
+    # 两个m条件使用同一组40个等间距兴奋/抑制比。 / The same 40 evenly spaced E/I ratios are used for both m conditions.
     M_VALUES = [float(args.only_m)] if args.only_m is not None else [0.90, 0.95]
     N_RUNS = int(args.n_runs)
     INITIAL_AREAL = 1.19116
@@ -253,14 +253,14 @@ if __name__ == "__main__":
 
     EI_ratios = np.linspace(EI_min, EI_max, N_RUNS, dtype=float)
 
-    # Configuration.
+    # 配置。 / Configuration.
     USE_THREADS = False
     max_workers = int(args.max_workers)
     Executor = ThreadPoolExecutor if USE_THREADS else ProcessPoolExecutor
 
     for m_value in M_VALUES:
-        # Separate directories prevent m=0.90 and m=0.95 from overwriting
-        # each other's per-trial files and summary tables.
+        # 独立目录防止m=0.90与m=0.95 / Separate directories prevent m=0.90 and m=0.95 from overwriting
+        # 相互覆盖逐试次文件和汇总表。 / each other's per-trial files and summary tables.
         m_tag = f"m_{m_value:.2f}"
         out_root = os.path.join(base_out_root, m_tag)
         os.makedirs(out_root, exist_ok=True)
@@ -291,8 +291,8 @@ if __name__ == "__main__":
         print(f"Starting {N_RUNS} trials for m0={m_value:.2f}")
         print(f"Output directory: {out_root}")
 
-        # Stage 1: recalibrate the two hyperparameters for this target m.
-        # Formal 40-trial generation starts only after calibration finishes.
+        # 阶段1：针对目标m重新校准两个超参数。 / Stage 1: recalibrate the two hyperparameters for this target m.
+        # 校准完成后才开始正式生成40个试次。 / Formal 40-trial generation starts only after calibration finishes.
         calibration_dir = os.path.join(out_root, "A_calibration")
         Areal_calibrated, Aer_calibrated = calibrate_real_and_er_A(
             target_m=float(m_value),
@@ -324,7 +324,7 @@ if __name__ == "__main__":
         futures = []
         with Executor(max_workers=max_workers) as ex:
             for k in range(1, N_RUNS + 1):
-                # Keep the same E/I value at trial k for both m conditions.
+                # 两个m条件的第k个试次使用相同兴奋/抑制比。 / Keep the same E/I value at trial k for both m conditions.
                 ei_local = float(EI_ratios[k - 1])
 
                 kwargs = dict(

@@ -31,7 +31,7 @@ def list_er_trials(root):
 def nan_to_empty_inplace(csv_path):
     df = pd.read_csv(csv_path, header=None, dtype=str)
 
-    # pandas NaN -> ""
+    # 将pandas NaN转换为空字符串。 / pandas NaN -> ""
     df = df.fillna("")
 
     df = df.replace(

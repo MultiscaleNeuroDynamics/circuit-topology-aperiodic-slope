@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate five deterministic joint biophysical perturbation profiles."""
+"""生成五个确定性的联合生物物理扰动配置。 / Generate five deterministic joint biophysical perturbation profiles."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+"""图3示意图：丙泊酚验证流程。布局为a镇静流程与分析状态、b猪ECoG/EThG记录布局、c代表性原始波形、d PSD与FOOOF非周期拟合；a占据首行全宽，b/c/d紧凑排列于第二行。区域配色为皮层蓝色、丘脑橙色；状态2绿色、状态4紫色、其他灰色。最终7.16英寸论文宽度下所有可见图中文字至少10磅；d采用两个并排近正方形坐标轴，纵轴完整包含FOOOF拟合以避免截断；a报告各状态可用动物数及状态2到4的配对动物数。输入为pig.png及ds003380 EDF文件；输出为原文列出的PNG和PDF流程图。 / 
 Figure 3 schematic: propofol validation workflow.
 
 Layout:
@@ -63,7 +63,7 @@ except Exception:
 
 
 # ============================================================
-# User settings
+# 用户设置。 / User settings
 # ============================================================
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -81,18 +81,18 @@ OUT_PNG = WORKFLOW_DIR / "propofol_workflow.png"
 OUT_PDF = WORKFLOW_DIR / "propofol_workflow.pdf"
 DPI = 600
 
-# Match the final printed size used by IEEE/EMBC two-column manuscripts.
-# v12 uses slightly larger in-figure fonts because Fig. 2 looked undersized
-# after insertion into the manuscript.
-# Because LaTeX uses \includegraphics[width=\textwidth]{...}, a 10+ inch
-# source figure is downscaled and all labels become too small. Keeping the
-# PDF close to the final full-text width preserves the intended font sizes.
+# 匹配IEEE/EMBC双栏论文的最终印刷尺寸。 / Match the final printed size used by IEEE/EMBC two-column manuscripts.
+# v12略微增大图内字体，因为图2插入论文后 / v12 uses slightly larger in-figure fonts because Fig. 2 looked undersized
+# 显得过小。 / after insertion into the manuscript.
+# 由于LaTeX使用按正文宽度插图的命令，超过10英寸的 / Because LaTeX uses \includegraphics[width=\textwidth]{...}, a 10+ inch
+# 源图会缩小，导致所有标签过小。使 / source figure is downscaled and all labels become too small. Keeping the
+# PDF接近最终正文全宽可保持预期字体大小。 / PDF close to the final full-text width preserves the intended font sizes.
 FIG_WIDTH_IN = 7.16
 FIG_HEIGHT_IN = 5.15
 
 ROTATE_PIG_180 = True
 
-# Representative data selection
+# 代表性数据选择。 / Representative data selection
 REPRESENT_ANIMAL = None
 PREFERRED_ANIMALS = ["P_737", "P_743", "P_746", "P_752", "P_728", "P_738"]
 
@@ -106,12 +106,12 @@ MIN_SIGNAL_STD = 1e-12
 MIN_MEDIAN_LOG10_PSD = -30.0
 MAX_WITHIN_CHANNEL_LOGPSD_RANGE = 12.0
 
-# Raw waveform panel
+# 原始波形面板。 / Raw waveform panel
 RAW_DURATION_SEC = 5.0
 RAW_SEARCH_START_SEC = 10.0
 RAW_SEARCH_STEP_SEC = 2.0
 
-# PSD / FOOOF panel
+# PSD与FOOOF面板。 / PSD / FOOOF panel
 PSD_START_SEC = 20.0
 PSD_USE_SEC = 120.0
 
@@ -125,9 +125,9 @@ FOOOF_MIN_PEAK_HEIGHT = 0.05
 FOOOF_PEAK_THRESHOLD = 2.0
 FOOOF_APERIODIC_MODE = "fixed"
 
-# Sample sizes from Frasch et al. Scientific Data 2021, Table 3.
-# These are available datasets per state; the main State 2→State 4 contrast is paired
-# across the propofol-exposed animals, hence n=6.
+# 样本量来自Frasch等人在Scientific Data 2021中的表3。 / Sample sizes from Frasch et al. Scientific Data 2021, Table 3.
+# 这些是各状态的可用数据集数；主要状态2到状态4比较 / These are available datasets per state; the main State 2→State 4 contrast is paired
+# 在接受丙泊酚的动物中配对，因此n=6。 / across the propofol-exposed animals, hence n=6.
 STATE_SAMPLE_N = {
     "State 1": 11,
     "State 2": 11,
@@ -139,26 +139,26 @@ MAIN_CONTRAST_N = 6
 
 
 # ============================================================
-# Figure style
+# 图形样式。 / Figure style
 # ============================================================
 
-# Region colors: cortex / thalamus
-CORTEX_COLOR = "#3B6EA8"     # blue
-THAL_COLOR   = "#D97706"     # orange
+# 区域颜色：皮层与丘脑。 / Region colors: cortex / thalamus
+CORTEX_COLOR = "#3B6EA8"     # 蓝色。 / blue
+THAL_COLOR   = "#D97706"     # 橙色。 / orange
 
-# State colors: state 2 / state 4
-STATE2_LINE  = "#2E7D32"     # green
-STATE4_LINE  = "#8E5EA2"     # purple
-STATE2_FILL  = "#DDEEDC"     # light green
-STATE4_FILL  = "#E9D9F0"     # light purple
+# 状态颜色：状态2与状态4。 / State colors: state 2 / state 4
+STATE2_LINE  = "#2E7D32"     # 绿色。 / green
+STATE4_LINE  = "#8E5EA2"     # 紫色。 / purple
+STATE2_FILL  = "#DDEEDC"     # 浅绿色。 / light green
+STATE4_FILL  = "#E9D9F0"     # 浅紫色。 / light purple
 GRAY_STATE   = "#E8E8E8"
 
 DARK  = "#222222"
 MID   = "#666666"
 LIGHT = "#D4D4D4"
 
-# Font sizes are specified for the final 7.16-inch-wide printed figure.
-# Every visible text object is kept at or above 10 pt; panel letters are larger.
+# 字体大小按最终7.16英寸宽的印刷图指定。 / Font sizes are specified for the final 7.16-inch-wide printed figure.
+# 所有可见文字至少为10磅，面板字母更大。 / Every visible text object is kept at or above 10 pt; panel letters are larger.
 FONT_PANEL = 13.5
 FONT_TITLE = 10.5
 FONT_TEXT = 10.0
@@ -168,9 +168,9 @@ FONT_LEGEND = 10.0
 MIN_FINAL_FONT_PT = 10.0
 
 plt.rcParams.update({
-    # Use a Times-like serif font to match the manuscript body and other figures.
-    # On Windows this will resolve to Times New Roman; otherwise matplotlib
-    # falls back to a compatible serif font.
+    # 使用类似Times的衬线字体，匹配论文正文及其他图。 / Use a Times-like serif font to match the manuscript body and other figures.
+    # 在Windows上解析为Times New Roman，否则matplotlib / On Windows this will resolve to Times New Roman; otherwise matplotlib
+    # 回退到兼容的衬线字体。 / falls back to a compatible serif font.
     "font.family": "serif",
     "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
     "mathtext.fontset": "stix",
@@ -187,14 +187,14 @@ plt.rcParams.update({
 
 
 # ============================================================
-# Pig and electrode geometry
+# 猪与电极的几何布局。 / Pig and electrode geometry
 # ============================================================
 
 PIG_CX = 0.650
 PIG_CY = 0.505
-# Maximum drawing box. The actual displayed width/height are computed
-# from the cropped image aspect ratio and the physical axes aspect ratio,
-# preventing the pig head from being stretched or compressed.
+# 最大绘图框；实际显示宽高根据 / Maximum drawing box. The actual displayed width/height are computed
+# 裁剪图像宽高比及坐标轴物理宽高比计算， / from the cropped image aspect ratio and the physical axes aspect ratio,
+# 防止猪头图像拉伸或压缩。 / preventing the pig head from being stretched or compressed.
 PIG_MAX_W = 0.90
 PIG_MAX_H = 0.76
 PIG_ALPHA = 0.30
@@ -206,7 +206,7 @@ ELEC_SY = 0.0100
 
 
 # ============================================================
-# General drawing helpers
+# 通用绘图辅助函数。 / General drawing helpers
 # ============================================================
 
 def add_arrow(ax, xy1, xy2, color=MID, lw=1.0, ms=9, style="-|>", zorder=5):
@@ -262,7 +262,7 @@ def map_electrode(x_mm, ap_mm):
 
 
 def draw_label_line(ax, text, y, color=MID):
-    """Draw a left anatomical label followed by a non-overlapping guide line.
+    """绘制左侧解剖标签和不重叠的引导线。标签按固定锚点右对齐，线从小间隙后开始，使Temporal和Occipital等较长文字不与水平线重叠。 / Draw a left anatomical label followed by a non-overlapping guide line.
 
     The label is right-aligned to a fixed anchor and the line starts after a
     small gap, so longer words such as ``Temporal`` and ``Occipital`` never
@@ -290,7 +290,7 @@ def draw_label_line(ax, text, y, color=MID):
 
 
 def image_extent_preserve_aspect(ax, img, cx, cy, max_w, max_h):
-    """Return an image extent that preserves the source-image aspect ratio.
+    """返回保持原图宽高比的图像范围。matplotlib的aspect='auto'会填满指定范围，面板几何变化时可能使猪头显得过窄；此处同时根据裁剪图像和坐标轴物理宽高比调整。 / Return an image extent that preserves the source-image aspect ratio.
 
     Matplotlib's ``aspect='auto'`` fills the requested extent and can make the
     pig head appear unnaturally narrow when the panel geometry changes. Here
@@ -319,7 +319,7 @@ def image_extent_preserve_aspect(ax, img, cx, cy, max_w, max_h):
 
 
 def add_panel_label(ax, letter, x=0.000, y=1.000):
-    """Panel letters placed just outside/at the plotting block.
+    """将面板字母置于绘图区边缘或外侧，避免a/b/c/d占用实际绘图空间，使整行更紧凑。 / Panel letters placed just outside/at the plotting block.
 
     This avoids using real plotting space for the a/b/c/d labels and makes
     the row look more compact.
@@ -337,7 +337,7 @@ def add_panel_label(ax, letter, x=0.000, y=1.000):
 
 
 # ============================================================
-# Data helpers
+# 数据辅助函数。 / Data helpers
 # ============================================================
 
 def parse_state_from_name(fname):
@@ -898,7 +898,7 @@ def load_representative_data():
 
 
 # ============================================================
-# Panel a: protocol
+# 面板a：实验流程。 / Panel a: protocol
 # ============================================================
 
 def draw_state_timeline_panel(ax):
@@ -908,12 +908,12 @@ def draw_state_timeline_panel(ax):
 
     add_panel_label(ax, "a", x=0.000, y=0.995)
 
-    # ax.text(
-    #     0.50, 0.985, "Sedation protocol and analysis states",
-    #     ha="center", va="top",
-    #     fontsize=9.8,
-    #     weight="bold",
-    #     color=DARK
+    # 已注释的文字绘制调用。 / ax.text(
+    # 标题位置与文字：镇静流程和分析状态。 / 0.50, 0.985, "Sedation protocol and analysis states",
+    # 水平居中、垂直顶端对齐。 / ha="center", va="top",
+    # 字体大小9.8磅。 / fontsize=9.8,
+    # 粗体字重。 / weight="bold",
+    # 深色文字。 / color=DARK
     # )
 
     states = [
@@ -924,10 +924,10 @@ def draw_state_timeline_panel(ax):
         ("State 5", "60 min\nmoderate",       STATE_SAMPLE_N["State 5"], GRAY_STATE),
     ]
 
-    # Wider boxes and less internal whitespace; keeps panel a compact.
+    # 加宽框体、减少内部留白，使面板a紧凑。 / Wider boxes and less internal whitespace; keeps panel a compact.
     x_start, x_end = 0.080, 0.920
-    # Taller boxes: more vertical room for State / n / description.
-    # Keep the top near the protocol guide line by lowering y while increasing h.
+    # 增高框体，为状态、样本数和描述提供更多垂直空间。 / Taller boxes: more vertical room for State / n / description.
+    # 增加高度时降低纵坐标，使顶部保持靠近流程引导线。 / Keep the top near the protocol guide line by lowering y while increasing h.
     y = 0.420
     h = 0.340
     gap = 0.018
@@ -940,8 +940,8 @@ def draw_state_timeline_panel(ax):
     for i, (state, desc, n_animals, fc) in enumerate(states):
         x = x_start + i * (w + gap)
 
-        # No visible box border. State 2 and State 4 are indicated by their fill
-        # colors and downstream labels, rather than by an outline.
+        # 不显示框体边界；状态2和状态4通过填充 / No visible box border. State 2 and State 4 are indicated by their fill
+        # 颜色及后续标签区分，而非通过轮廓线区分。 / colors and downstream labels, rather than by an outline.
         add_round_box(
             ax, x, y, w, h,
             fc=fc,
@@ -960,8 +960,8 @@ def draw_state_timeline_panel(ax):
             zorder=4
         )
 
-        # Available animal count for this state. State 2 has n=11 available overall,
-        # while the State 2→4 contrast uses paired n=6 animals.
+        # 该状态的可用动物数；状态2总体可用n=11， / Available animal count for this state. State 2 has n=11 available overall,
+        # 而状态2到状态4比较采用配对n=6。 / while the State 2→4 contrast uses paired n=6 animals.
         if state == "State 2":
             n_color = STATE2_LINE
         elif state == "State 4":
@@ -1038,7 +1038,7 @@ def draw_state_timeline_panel(ax):
 
 
 # ============================================================
-# Panel b: pig layout
+# 面板b：猪的布局。 / Panel b: pig layout
 # ============================================================
 
 def draw_pig_electrode_panel(ax, pig_img_path):
@@ -1072,12 +1072,12 @@ def draw_pig_electrode_panel(ax, pig_img_path):
 
     add_panel_label(ax, "b", x=0.000, y=1.000)
 
-    # ax.text(
-    #     0.50, 0.985, "Pig ECoG/EThG recording layout",
-    #     ha="center", va="top",
-    #     fontsize=9.3,
-    #     weight="bold",
-    #     color=DARK
+    # 已注释的文字绘制调用。 / ax.text(
+    # 标题位置与文字：猪ECoG/EThG记录布局。 / 0.50, 0.985, "Pig ECoG/EThG recording layout",
+    # 水平居中、垂直顶端对齐。 / ha="center", va="top",
+    # 字体大小9.3磅。 / fontsize=9.3,
+    # 粗体字重。 / weight="bold",
+    # 深色文字。 / color=DARK
     # )
 
     y_mid_top = map_electrode(0, 32)[1] + 0.12
@@ -1294,7 +1294,7 @@ def draw_pig_electrode_panel(ax, pig_img_path):
 
 
 # ============================================================
-# Panel c: raw waveforms
+# 面板c：原始波形。 / Panel c: raw waveforms
 # ============================================================
 
 def draw_panel_raw_waveforms(ax, example):
@@ -1304,14 +1304,14 @@ def draw_panel_raw_waveforms(ax, example):
 
     add_panel_label(ax, "c", x=0.000, y=1.000)
 
-    # ax.text(
+    # 已注释的文字绘制调用。 / ax.text(
     #     0.50, 0.985,
-    #     "Representative raw waveforms",
-    #     ha="center",
-    #     va="top",
-    #     fontsize=9.3,
-    #     weight="bold",
-    #     color=DARK
+    # 标题文字：代表性原始波形。 / "Representative raw waveforms",
+    # 水平居中对齐。 / ha="center",
+    # 垂直顶端对齐。 / va="top",
+    # 字体大小9.3磅。 / fontsize=9.3,
+    # 粗体字重。 / weight="bold",
+    # 深色文字。 / color=DARK
     # )
 
     if example is None:
@@ -1337,9 +1337,9 @@ def draw_panel_raw_waveforms(ax, example):
         ("Thalamus", "state4", STATE4_LINE, 0.220, "State 4"),
     ]
 
-    # Pull traces leftward to remove the apparent b-c gutter.
-    # The z-scored traces are also clipped and slightly compressed vertically
-    # so the four rows do not overlap.
+    # 将轨迹左移，消除面板b和c之间明显的空隙。 / Pull traces leftward to remove the apparent b-c gutter.
+    # 对z分数轨迹进行截断并略微压缩垂直间距， / The z-scored traces are also clipped and slightly compressed vertically
+    # 避免四行相互重叠。 / so the four rows do not overlap.
     x_trace0 = 0.315
     x_trace1 = 0.975
     amp = 0.025
@@ -1429,7 +1429,7 @@ def draw_panel_raw_waveforms(ax, example):
 
 
 # ============================================================
-# Panel d: PSD + FOOOF
+# 面板d：PSD与FOOOF。 / Panel d: PSD + FOOOF
 # ============================================================
 
 def _beta_text(fit2, fit4):
@@ -1462,7 +1462,7 @@ def _plot_psd_fit_axis(ax, fit2, fit4, title, show_ylabel=True):
         f = freqs[mask]
         y = np.log10(np.maximum(psd[mask], 1e-300))
 
-        # raw PSD: thin solid
+        # 原始PSD：细实线。 / raw PSD: thin solid
         ax.plot(
             f, y,
             color=color,
@@ -1473,7 +1473,7 @@ def _plot_psd_fit_axis(ax, fit2, fit4, title, show_ylabel=True):
 
         raw_y.extend(list(y[np.isfinite(y)]))
 
-        # FOOOF aperiodic fit: dashed
+        # FOOOF非周期拟合：虚线。 / FOOOF aperiodic fit: dashed
         if fit.get("success", False) and fit.get("freqs_fit", None) is not None:
             f_fit = np.asarray(fit["freqs_fit"])
             ap_y = np.asarray(fit["aperiodic_log10"])
@@ -1496,8 +1496,8 @@ def _plot_psd_fit_axis(ax, fit2, fit4, title, show_ylabel=True):
     ax.set_xlim(1, 100)
 
     # --------------------------------------------------------
-    # y-limit:
-    # raw PSD uses robust range, FOOOF fits must be fully included.
+    # 纵轴范围。 / y-limit:
+    # 原始PSD使用稳健范围，FOOOF拟合须完整包含。 / raw PSD uses robust range, FOOOF fits must be fully included.
     # --------------------------------------------------------
     raw_y = np.asarray(raw_y, dtype=float)
     raw_y = raw_y[np.isfinite(raw_y)]
@@ -1523,7 +1523,7 @@ def _plot_psd_fit_axis(ax, fit2, fit4, title, show_ylabel=True):
         span = max(hi - lo, 0.8)
         ax.set_ylim(lo - 0.16 * span, hi + 0.20 * span)
 
-    # reference-like geometry: near-square PSD axes
+    # 参考样式几何布局：近正方形PSD坐标轴。 / reference-like geometry: near-square PSD axes
     try:
         ax.set_box_aspect(1.0)
     except Exception:
@@ -1545,7 +1545,7 @@ def _plot_psd_fit_axis(ax, fit2, fit4, title, show_ylabel=True):
 
     ax.grid(False)
 
-    # beta text
+    # beta文字标注。 / beta text
     ax.text(
         0.98, 0.96,
         _beta_text(fit2, fit4),
@@ -1565,14 +1565,14 @@ def draw_panel_psd_fooof(ax, example):
 
     add_panel_label(ax, "d", x=0.000, y=1.000)
 
-    # ax.text(
+    # 已注释的文字绘制调用。 / ax.text(
     #     0.50, 0.985,
-    #     "PSD and FOOOF aperiodic fits",
-    #     ha="center",
-    #     va="top",
-    #     fontsize=9.3,
-    #     weight="bold",
-    #     color=DARK
+    # 标题文字：PSD与FOOOF非周期拟合。 / "PSD and FOOOF aperiodic fits",
+    # 水平居中对齐。 / ha="center",
+    # 垂直顶端对齐。 / va="top",
+    # 字体大小9.3磅。 / fontsize=9.3,
+    # 粗体字重。 / weight="bold",
+    # 深色文字。 / color=DARK
     # )
 
     if example is None:
@@ -1589,7 +1589,7 @@ def draw_panel_psd_fooof(ax, example):
     cortex_ch = example["cortex_ch"]
     thal_ch = example["thal_ch"]
 
-    # Two near-square PSD axes side by side.
+    # 两个近正方形PSD坐标轴并排。 / Two near-square PSD axes side by side.
     ax_ctx = ax.inset_axes([0.105, 0.210, 0.375, 0.620])
     ax_tha = ax.inset_axes([0.590, 0.210, 0.375, 0.620])
 
@@ -1609,7 +1609,7 @@ def draw_panel_psd_fooof(ax, example):
         show_ylabel=False
     )
 
-    # Compact legend above the two square axes
+    # 在两个方形坐标轴上方放置紧凑图例。 / Compact legend above the two square axes
     legend_y = 0.945
 
     ax.plot(
@@ -1692,11 +1692,11 @@ def draw_panel_psd_fooof(ax, example):
 
 
 # ============================================================
-# Font audit
+# 字体检查。 / Font audit
 # ============================================================
 
 def audit_minimum_font_size(fig, minimum_pt=MIN_FINAL_FONT_PT):
-    """Fail early if any visible text is smaller than the journal requirement."""
+    """任一可见文字小于期刊要求时立即报错。 / Fail early if any visible text is smaller than the journal requirement."""
     violations = []
     for artist in fig.findobj(match=plt.Text):
         label = artist.get_text().strip()
@@ -1714,7 +1714,7 @@ def audit_minimum_font_size(fig, minimum_pt=MIN_FINAL_FONT_PT):
 
 
 # ============================================================
-# Main
+# 主程序。 / Main
 # ============================================================
 
 def main():
@@ -1754,8 +1754,8 @@ def main():
         print(f"       {e}")
         print("       Panels c/d will show placeholders.")
 
-    # a spans full width; b/c/d are in second row.
-    # d is largest to allow two near-square PSD axes.
+    # a横跨全宽，b/c/d位于第二行。 / a spans full width; b/c/d are in second row.
+    # d最大，以容纳两个近正方形PSD坐标轴。 / d is largest to allow two near-square PSD axes.
     fig = plt.figure(figsize=(FIG_WIDTH_IN, FIG_HEIGHT_IN), dpi=150)
 
     gs = fig.add_gridspec(

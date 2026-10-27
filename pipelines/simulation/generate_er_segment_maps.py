@@ -58,7 +58,7 @@ def list_trial_dirs(root_dir: str, pattern=r"^ER_trial\d+$"):
     return ds
 
 def read_csv_skip_first_line(path: str) -> pd.DataFrame:
-    # Accept either headerless maps or maps with a textual first row.
+    # 兼容无表头映射及首行为文本的映射。 / Accept either headerless maps or maps with a textual first row.
     df = pd.read_csv(path, header=None, dtype=str).fillna("")
     if df.shape[1] >= 2:
         c0 = pd.to_numeric(df.iloc[:, 0], errors="coerce")
@@ -210,7 +210,7 @@ def write_mapping(out_path: str, pairs: list):
 
 
 # =========================
-# Main execution.
+# 执行主程序。 / Main execution.
 # =========================
 if __name__ == "__main__":
     if not os.path.isfile(SYN_EE_PATH):
@@ -237,21 +237,21 @@ if __name__ == "__main__":
             print(f"[SKIP] missing ER spike file: {er_spike_path}")
             continue
 
-        # mapping paths
+        # 映射路径。 / mapping paths
         map_paths = {ly: os.path.join(tdir, MAP_NAMES[ly]) for ly in LAYER_ORDER}
         missing_maps = [ly for ly, p in map_paths.items() if not os.path.isfile(p)]
         if missing_maps:
             print(f"[SKIP] missing mapping files in {tname}: {missing_maps}")
             continue
 
-        # 1) capacities
+        # 1）容量。 / 1) capacities
         try:
             capE, capI, total_rows = load_segment_capacities(map_paths, ee_set)
         except Exception as e:
             print(f"[SKIP] load capacities failed: {e}")
             continue
 
-        # 2) group ER synapses
+        # 2）对ER突触分组。 / 2) group ER synapses
         try:
             groupsE, groupsI = group_er_synapses(er_spike_path)
         except Exception as e:
@@ -268,7 +268,7 @@ if __name__ == "__main__":
         for ly in LAYER_ORDER:
             print(f"  - {ly}: rows={total_rows.get(ly,0)}, capE={layer_remaining(capE[ly])}, capI={layer_remaining(capI[ly])}")
 
-        # 3) allocate (soft)
+        # 3）软分配。 / 3) allocate (soft)
         assignE, unallocE = allocate_groups_soft(groupsE, capE, LAYER_ORDER)
         assignI, unallocI = allocate_groups_soft(groupsI, capI, LAYER_ORDER)
 

@@ -2,16 +2,16 @@ TITLE Delayer rectifier
 
 COMMENT
 -----------------------------------------------------------------------------
-	"delayer-rectifier" K current for action potentials
+	动作电位的延迟整流钾电流 / "delayer-rectifier" K current for action potentials
 	---------------------------------------------------
 
-  - potassium current, voltage-dependent
-  - iterative equations
+  电压依赖性钾电流 / - potassium current, voltage-dependent
+  迭代方程 / - iterative equations
 
-  Model of IKd for hippocampal pyramidal cells, from
-  Traub & Miles, Neuronal Networks of the Hippocampus, Cambridge, 1991
+  海马锥体细胞IKd模型，来源如下 / Model of IKd for hippocampal pyramidal cells, from
+  参考文献：Traub与Miles，《海马神经元网络》，剑桥，1991年 / Traub & Miles, Neuronal Networks of the Hippocampus, Cambridge, 1991
 
-  Written by Alain Destexhe, Laval University, 1996
+  作者Alain Destexhe，拉瓦尔大学，1996年 / Written by Alain Destexhe, Laval University, 1996
 -----------------------------------------------------------------------------
 ENDCOMMENT
 
@@ -35,7 +35,7 @@ UNITS {
 
 PARAMETER {
 	gkbar	= .005 	(mho/cm2)
-	vtraub	= -55	(mV)		: adjusts threshold
+	vtraub	= -55	(mV)		: 调整阈值 / adjusts threshold
 	ek	= -90	(mV)
 	celsius = 36    (degC)
 	dt              (ms)
@@ -61,12 +61,12 @@ BREAKPOINT {
 }
 
 
-:DERIVATIVE states {
-:	evaluate_fct(v)
-:	n' = (n_inf - n) / tau_n
+: 已注释的状态变量微分方程块 / DERIVATIVE states {
+: 已注释的电压依赖函数计算 / evaluate_fct(v)
+: 已注释的n门控变量微分方程 / n' = (n_inf - n) / tau_n
 :}
 
-PROCEDURE states() {	: exact when v held constant
+PROCEDURE states() {	: 电压v保持恒定时为精确解 / exact when v held constant
 	evaluate_fct(v)
 	n = n + n_exp * (n_inf - n)
 }
@@ -74,9 +74,9 @@ PROCEDURE states() {	: exact when v held constant
 UNITSOFF
 INITIAL {
 :
-:  Q10 was assumed to be 2.3 for both currents
+: 两种电流的Q10均假设为2.3 / Q10 was assumed to be 2.3 for both currents
 :
-:  original measurements at room temperature
+: 原始测量在室温下进行 / original measurements at room temperature
 
 	tadj = 3.0 ^ ((celsius-36)/ 10 )
 	evaluate_fct(v)
@@ -85,7 +85,7 @@ INITIAL {
 
 PROCEDURE evaluate_fct(v(mV)) { LOCAL a,b,v2
 
-	v2 = v - vtraub : convert to traub convention
+	v2 = v - vtraub : 转换为Traub约定 / convert to traub convention
 
 	a = 0.032 * (15-v2) / ( exp((15-v2)/5) - 1)
 	b = 0.5 * exp((10-v2)/40)

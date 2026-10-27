@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Compute realised synaptic E/I ratios for paired REAL and ER trials.
+"""计算REAL和ER配对试次的实际突触兴奋/抑制比。REAL突触依据MICrONS突触前细胞类型分类；ER突触依据编码中的兴奋/抑制标识符前缀分类。输出每个配对试次中各拓扑的事件计数比。 / Compute realised synaptic E/I ratios for paired REAL and ER trials.
 
 REAL synapses are classified from their presynaptic MICrONS cell type. ER
 synapses use the encoded excitatory/inhibitory identifier prefix. The output
@@ -18,16 +18,16 @@ import multiprocessing as mp
 from pathlib import Path
 
 # -------------------------
-# Configuration.
+# 配置。 / Configuration.
 # -------------------------
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", REPOSITORY_ROOT / "work")).resolve()
 ALLEN_ROOT = PROJECT_ROOT / "ALLEN"
 BASE_DIR = str(Path(os.environ.get("TRIALS_ROOT", ALLEN_ROOT / "file" / "final_trial")).resolve())
 
-# REAL synapse identifier to presynaptic root identifier.
+# REAL突触标识符到突触前根标识符的映射。 / REAL synapse identifier to presynaptic root identifier.
 PROOFREAD_SYNAPSE_TABLE_PATH = str(ALLEN_ROOT / "file" / "proofread_cells_synapses.csv")
-# Presynaptic root identifier to cell type.
+# 突触前根标识符到细胞类型的映射。 / Presynaptic root identifier to cell type.
 PROOFREAD_CELLTYPE_PATH = str(ALLEN_ROOT / "file" / "proofread_cells_celltypes_all.csv")
 
 REAL_CSV_NAME = "microns_patch_synapse_spikes_real_ms.csv"
@@ -44,10 +44,10 @@ PRINT_MEM_EVERY_SEC = 5
 
 
 # -------------------------
-# Load input data.
+# 加载输入数据。 / Load input data.
 # -------------------------
 def _read_total_mem_bytes_linux():
-    # /proc/meminfo: MemTotal:  xxxx kB
+    # 读取系统总内存，单位为kB。 / /proc/meminfo: MemTotal:  xxxx kB
     try:
         with open("/proc/meminfo", "r") as f:
             for line in f:
@@ -61,7 +61,7 @@ def _read_total_mem_bytes_linux():
 
 
 def _read_proc_rss_bytes_linux(pid=None):
-    # /proc/<pid>/status: VmRSS: xxxx kB
+    # 读取指定进程的常驻内存，单位为kB。 / /proc/<pid>/status: VmRSS: xxxx kB
     if pid is None:
         pid = os.getpid()
     try:
@@ -187,8 +187,8 @@ def paired_cohen_dz(x, y):
 
 # -------------------------
 # -------------------------
-_SYN2PRE = None      # synapse_id -> pre_pt_root_id
-_ROOT2TYPE = None    # root_id -> celltype
+_SYN2PRE = None      # 突触标识符到突触前根标识符的映射。 / synapse_id -> pre_pt_root_id
+_ROOT2TYPE = None    # 根标识符到细胞类型的映射。 / root_id -> celltype
 
 
 def init_worker(synapse_table_path, celltype_path):
@@ -214,7 +214,7 @@ def process_one_trial(trial_dir):
     if not os.path.isfile(er_path):
         raise FileNotFoundError(f"[{trial_name}] missing: {er_path}")
 
-    # -------- REAL --------
+    # REAL真实拓扑。 / -------- REAL --------
     real_ids, real_counts = count_spikes_from_table(real_path)
 
     real_E = 0
@@ -243,7 +243,7 @@ def process_one_trial(trial_dir):
 
     real_ei = compute_ei_ratio_from_counts(real_E, real_I)
 
-    # -------- ER --------
+    # ER随机拓扑。 / -------- ER --------
     er_ids, er_counts = count_spikes_from_table(er_path)
 
     er_E = 0
@@ -277,7 +277,7 @@ def process_one_trial(trial_dir):
 
 
 # -------------------------
-# Main execution.
+# 执行主程序。 / Main execution.
 # -------------------------
 if __name__ == "__main__":
     mp.freeze_support()
@@ -287,12 +287,12 @@ if __name__ == "__main__":
     if not trial_dirs:
         raise RuntimeError(f"No ER_trial directories found under {BASE_DIR}")
 
-    # Memory-management details.
+    # 内存管理细节。 / Memory-management details.
     stop_evt = threading.Event()
     th = threading.Thread(target=mem_monitor, args=(stop_evt, PRINT_MEM_EVERY_SEC), daemon=True)
     th.start()
 
-    # Parallel execution.
+    # 并行执行。 / Parallel execution.
     max_workers = int(os.environ.get("MAX_WORKERS", max(1, (os.cpu_count() or 2) - 1)))
     print(f"[Parallel] max_workers = {max_workers}")
     print(f"[Trials] N = {len(trial_dirs)}")
@@ -325,14 +325,14 @@ if __name__ == "__main__":
             raise RuntimeError("One or more trial-level E/I calculations failed:\n" + "\n".join(errors))
 
     finally:
-        # Memory-management details.
+        # 内存管理细节。 / Memory-management details.
         stop_evt.set()
         th.join(timeout=1.0)
 
     t1 = time.time()
     print(f"[Time] total = {t1 - t0:.2f} s")
 
-    # Output handling.
+    # 输出处理。 / Output handling.
     df = pd.DataFrame(rows).sort_values("trial").reset_index(drop=True)
     out_csv = os.path.join(OUT_DIR, "EI_ratio_per_trial_REAL_vs_ER.csv")
     df.to_csv(out_csv, index=False, encoding="utf-8-sig")

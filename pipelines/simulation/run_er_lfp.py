@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate layer-resolved LFPs for the Erdős--Rényi control topology."""
+"""为Erdős–Rényi对照拓扑生成分层LFP。 / Generate layer-resolved LFPs for the Erdős--Rényi control topology."""
 
 import os
 import json
@@ -23,11 +23,11 @@ DEFAULT_ALLEN_ROOT = Path(
 
 # ==================================================
 # ==================================================
-ELECTRODE_POS = (669.60, -100.00, 882.58)  # (x, y, z) in µm
+ELECTRODE_POS = (669.60, -100.00, 882.58)  # 三维坐标，单位为微米。 / (x, y, z) in µm
 
 
 # ==================================================
-# Build task inputs.
+# 构建任务输入。 / Build task inputs.
 # ==================================================
 def build_synapse_spikes_and_ei(spike_file):
 
@@ -77,7 +77,7 @@ def addsyns_from_microns(connection_data,
 
     synParams = []
     synTimes = []
-    synTypes = []  # 0 = E, 1 = I
+    synTypes = []  # 0表示兴奋性，1表示抑制性。 / 0 = E, 1 = I
 
     for row in connection_data:
         syn_id = int(row[0])
@@ -105,7 +105,7 @@ def addsyns_from_microns(connection_data,
             params = parameters["eSynParams"].copy()
             synTypes.append(0)
 
-        # Synapse-processing details.
+        # 突触处理细节。 / Synapse-processing details.
         params['record_current'] = False
         params['idx'] = seg_idx
 
@@ -148,7 +148,7 @@ def run_one_cell(parameters,
         h.cvode.active(1)
         h.cvode.atol(1e-6)
 
-    # Accept both headerless maps and maps with a textual first row.
+    # 兼容无表头映射及首行为文本的映射。 / Accept both headerless maps and maps with a textual first row.
     connection_df = pd.read_csv(connection_file, header=None, dtype=str)
     c0 = pd.to_numeric(connection_df.iloc[:, 0], errors="coerce")
     c1 = pd.to_numeric(connection_df.iloc[:, 1], errors="coerce")
@@ -160,7 +160,7 @@ def run_one_cell(parameters,
     if connection_data.size == 0:
         raise RuntimeError(f"No valid [synapse_id, segment_id] rows in {connection_file}")
 
-    # Synapse-processing details.
+    # 突触处理细节。 / Synapse-processing details.
     synParams, synTimes, synTypes = addsyns_from_microns(
         connection_data, spike_times_by_syn, syn_is_inhibitory, parameters
     )
@@ -229,9 +229,9 @@ def run_microns_layer(
     save_root
 ):
     T_MAX = parameters["tmax"]
-    # ``save_root`` already ends with the layer name.  Appending it again
-    # creates the legacy ``trial/layer/layer`` layout and breaks restart
-    # detection, so all new runs write to ``trial/layer`` directly.
+    # save_root已以皮层层名结尾；再次追加层名 / ``save_root`` already ends with the layer name.  Appending it again
+    # 会生成历史trial/layer/layer结构，破坏续跑 / creates the legacy ``trial/layer/layer`` layout and breaks restart
+    # 检测，因此新运行均直接写入trial/layer。 / detection, so all new runs write to ``trial/layer`` directly.
     savePath = save_root
 
     return run_one_cell(
@@ -248,10 +248,10 @@ def run_microns_layer(
 
 
 # ==================================================
-# Main execution.
+# 执行主程序。 / Main execution.
 # ==================================================
 # ==================================================
-# Main execution.
+# 执行主程序。 / Main execution.
 # ==================================================
 # -*- coding: utf-8 -*-
 import os
@@ -266,7 +266,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 # ============================================================
 # ============================================================
 def _read_cpu_times():
-    # /proc/stat: cpu  user nice system idle iowait irq softirq steal guest guest_nice
+    # 系统CPU统计字段：用户、低优先级、内核、空闲、输入输出等待、中断、软中断、虚拟化被占用及客户机时间。 / /proc/stat: cpu  user nice system idle iowait irq softirq steal guest guest_nice
     with open("/proc/stat", "r") as f:
         line = f.readline()
     parts = line.split()
@@ -295,15 +295,15 @@ def _cpu_percent_linux(prev):
     return cpu, cur
 
 def _mem_linux_gb():
-    # /proc/meminfo: MemTotal, MemAvailable
+    # 系统内存统计：总内存与可用内存。 / /proc/meminfo: MemTotal, MemAvailable
     mt = None
     ma = None
     with open("/proc/meminfo", "r") as f:
         for line in f:
             if line.startswith("MemTotal:"):
-                mt = int(line.split()[1])  # kB
+                mt = int(line.split()[1])  # 千字节。 / kB
             elif line.startswith("MemAvailable:"):
-                ma = int(line.split()[1])  # kB
+                ma = int(line.split()[1])  # 千字节。 / kB
             if mt is not None and ma is not None:
                 break
     if mt is None or ma is None:
@@ -356,7 +356,7 @@ def monitor_resources(stop_event: mp.Event, interval_sec: float = 20.0):
 # ============================================================
 # ============================================================
 def run_one_sim_task(task):
-    """
+    """任务字典字段：试次名与目录、皮层层名、SWC文件、连接文件、较小的参数字典，以及全局保存根目录。 / 
     task dict fields:
       - trial_name, trial_dir
       - layer_name, swc_file, conn_file
@@ -375,7 +375,7 @@ def run_one_sim_task(task):
     save_root_global = task["save_root_global"]
 
     # ==================================================
-    # Output handling.
+    # 输出处理。 / Output handling.
     # ==================================================
     save_root = os.path.join(save_root_global, trial_name, layer_name)
     os.makedirs(save_root, exist_ok=True)
@@ -388,20 +388,20 @@ def run_one_sim_task(task):
         return (trial_name, layer_name, out_lfp_path)
 
     # ==================================================
-    # File-handling details.
+    # 文件处理细节。 / File-handling details.
     # ==================================================
     spike_file = os.path.join(trial_dir, "microns_patch_synapse_spikes_ER_ms.csv")
     if not os.path.isfile(spike_file):
         raise FileNotFoundError(f"[{trial_name}|{layer_name}] missing spike_file: {spike_file}")
 
-    # Input handling.
+    # 输入处理。 / Input handling.
     if not os.path.isfile(swc_file):
         raise FileNotFoundError(f"[{trial_name}|{layer_name}] missing swc_file: {swc_file}")
     if not os.path.isfile(conn_file):
         raise FileNotFoundError(f"[{trial_name}|{layer_name}] missing conn_file: {conn_file}")
 
     # ==================================================
-    # Build task inputs.
+    # 构建任务输入。 / Build task inputs.
     # ==================================================
     syn_ids, spike_times_by_syn, syn_is_inhibitory = build_synapse_spikes_and_ei(spike_file=spike_file)
 
@@ -426,19 +426,19 @@ def run_one_sim_task(task):
 
 
 # ============================================================
-# Parallel execution.
+# 并行执行。 / Parallel execution.
 # ============================================================
 if __name__ == "__main__":
     mp.freeze_support()
 
     # ==================================================
-    # Parallel execution.
+    # 并行执行。 / Parallel execution.
     # ==================================================
     MAX_PARALLEL = int(os.environ.get("MAX_WORKERS", "10"))
     MONITOR_INTERVAL_SEC = 5.0
 
     # ==================================================
-    # Paths and configuration.
+    # 路径与配置。 / Paths and configuration.
     # ==================================================
     param_file = os.environ.get(
         "PARAM_FILE",
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     os.makedirs(save_root_global, exist_ok=True)
 
     # ==================================================
-    # Load input data.
+    # 加载输入数据。 / Load input data.
     # ==================================================
     if not os.path.isfile(param_file):
         raise FileNotFoundError(f"missing param_file: {param_file}")
@@ -464,12 +464,12 @@ if __name__ == "__main__":
         parameters = json.load(f)
 
     # ==================================================
-    # Load input data.
+    # 加载输入数据。 / Load input data.
     # ==================================================
-    # if not os.path.isfile(SYN_EE_PATH):
-    #     raise FileNotFoundError(f"missing SYN_EE_PATH: {SYN_EE_PATH}")
-    # ee_set = load_ee_set(SYN_EE_PATH)
-    # print(f"[INFO] EE_SET size = {len(ee_set)}")
+    # 已注释的检查：兴奋到兴奋突触路径文件是否存在。 / if not os.path.isfile(SYN_EE_PATH):
+    # 已注释的异常：缺少SYN_EE_PATH文件。 / raise FileNotFoundError(f"missing SYN_EE_PATH: {SYN_EE_PATH}")
+    # 已注释的加载：读取兴奋到兴奋连接集合。 / ee_set = load_ee_set(SYN_EE_PATH)
+    # 已注释的诊断输出：EE_SET集合大小。 / print(f"[INFO] EE_SET size = {len(ee_set)}")
 
 
     # ==================================================
@@ -496,7 +496,7 @@ if __name__ == "__main__":
         print("  -", os.path.basename(d))
 
     # ==================================================
-    # Build task inputs.
+    # 构建任务输入。 / Build task inputs.
     # ==================================================
     tasks = []
     for trial_dir in trial_dirs:
@@ -569,7 +569,7 @@ if __name__ == "__main__":
         raise RuntimeError(f"{len(errors)} task(s) failed.")
 
     # ==================================================
-    # Output handling.
+    # 输出处理。 / Output handling.
     # ==================================================
     layer_order = {"L2_3": 0, "L4": 1, "L5": 2, "L6": 3}
     results.sort(key=lambda x: (x[0], layer_order.get(x[1], 99)))

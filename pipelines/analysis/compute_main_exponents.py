@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Estimate paired REAL/ER aperiodic exponents and create summary figures.
+"""估计各试次REAL与ER的配对非周期指数并生成汇总图。每个试次内汇总各皮层层的LFP，在1至100 Hz拟合FOOOF，并输出回归流程所需的配对指数表、质量控制结果和描述性结果。 / Estimate paired REAL/ER aperiodic exponents and create summary figures.
 
 Layer-resolved LFPs are aggregated within each trial. FOOOF is fitted over
 1--100 Hz, and the paired exponent table consumed by the regression pipeline
@@ -24,7 +24,7 @@ import statsmodels.api as sm
 
 
 # =========================
-# Basic utilities
+# 基本工具。 / Basic utilities
 # =========================
 def bandpass_filter(x, lowcut, highcut, fs, order=4):
     sos = butter(order, [lowcut, highcut], btype="bandpass", fs=fs, output="sos")
@@ -129,7 +129,7 @@ def run_fooof(
     name_noext = os.path.splitext(os.path.basename(out_json_path))[0]
     fm_obj.save(file_name=name_noext, file_path=out_dir, save_results=True)
 
-    # optional per-trial debug plot
+    # 可选的逐试次调试图。 / optional per-trial debug plot
     plt.figure(figsize=(7, 4))
     fm_obj.plot()
     plt.title("FOOOF fit (1–100 Hz)")
@@ -185,15 +185,15 @@ def read_EI_ratio_from_summary(trial_dir, fname="summary.txt"):
 
 
 # =========================
-# Trial processing
+# 试次处理。 / Trial processing
 # =========================
 def process_one_trial(trial_dir, out_tag="REAL"):
     trial_name = os.path.basename(trial_dir.rstrip("/"))
 
     def locate_layer_lfp(layer):
-        # The first candidate is the canonical release layout.  The second
-        # keeps existing results from the historical double-layer layout
-        # readable without copying or overwriting them.
+        # 第一个候选路径采用标准发布目录结构；第二个路径 / The first candidate is the canonical release layout.  The second
+        # 用于读取历史双层目录结构中的已有结果， / keeps existing results from the historical double-layer layout
+        # 无需复制或覆盖这些结果。 / readable without copying or overwriting them.
         candidates = (
             os.path.join(trial_dir, layer, "_lfp.npy"),
             os.path.join(trial_dir, layer, layer, "_lfp.npy"),
@@ -246,7 +246,7 @@ def process_one_trial(trial_dir, out_tag="REAL"):
 
 
 # =========================
-# Robust paired stats
+# 稳健配对统计。 / Robust paired stats
 # =========================
 def paired_cohen_dz(x, y):
     x = np.asarray(x, float)
@@ -301,7 +301,7 @@ def paired_stats(x, y, n_perm=20000, seed=0):
 
 
 # =========================
-# Publication plot helpers
+# 发表用绘图工具。 / Publication plot helpers
 # =========================
 def nature_palette():
     return {"REAL": "#1f77b4", "ER": "#ff7f0e", "INK": "#1a1a1a"}
@@ -369,7 +369,7 @@ def plot_paired_panel(ax, real_vals, er_vals, ylabel, pval, colors):
 
 
 def ols_fit_with_inference(x, y):
-    """
+    """OLS模型：y ~ 1 + x。返回包含斜率、截距及推断结果的fit_info字典，以及statsmodels模型结果。 / 
     OLS: y ~ 1 + x
     Returns:
       fit_info dict (slope/intercept + inference)
@@ -382,7 +382,7 @@ def ols_fit_with_inference(x, y):
     if x.size < 3:
         raise RuntimeError("At least three finite observations are required for OLS.")
 
-    X = sm.add_constant(x)  # [1, x]
+    X = sm.add_constant(x)  # 设计矩阵的常数项与自变量。 / [1, x]
     model = sm.OLS(y, X).fit()
 
     intercept = float(model.params[0])
@@ -397,7 +397,7 @@ def ols_fit_with_inference(x, y):
     p_intercept = float(model.pvalues[0])
     p_slope = float(model.pvalues[1])
 
-    ci = model.conf_int(alpha=0.05)  # 95% CI
+    ci = model.conf_int(alpha=0.05)  # 95%置信区间。 / 95% CI
     ci_intercept_lo, ci_intercept_hi = float(ci[0, 0]), float(ci[0, 1])
     ci_slope_lo, ci_slope_hi = float(ci[1, 0]), float(ci[1, 1])
 
@@ -425,7 +425,7 @@ def ols_fit_with_inference(x, y):
 
 
 def plot_delta_vs_Ilevel(ax, I_level, d_exp, colors, legend_outside=True):
-    """
+    """关系图：横轴为兴奋/抑制比I_level，纵轴为指数差ER减REAL；散点按纵轴正负着色，添加statsmodels的OLS回归线，将图例置于图外。返回fit_info字典。 / 
     Relationship plot:
     x = EI ratio (I_level)
     y = Δexponent (ER - REAL)
@@ -495,7 +495,7 @@ def plot_delta_vs_Ilevel(ax, I_level, d_exp, colors, legend_outside=True):
 
 
 # =========================
-# Main
+# 主程序。 / Main
 # =========================
 if __name__ == "__main__":
     repository_root = Path(__file__).resolve().parents[2]
@@ -534,7 +534,7 @@ if __name__ == "__main__":
     os.makedirs(out_dir, exist_ok=True)
 
     # =========================
-    # Run FOOOF per trial
+    # 逐试次运行FOOOF。 / Run FOOOF per trial
     # =========================
     real_rows, er_rows = [], []
     for i, name in enumerate(common_names, start=1):
@@ -568,7 +568,7 @@ if __name__ == "__main__":
     )
 
     # =========================
-    # Stats (paired exponent)
+    # 统计分析：配对非周期指数。 / Stats (paired exponent)
     # =========================
     stats_exp = paired_stats(df_real["exponent"].values, df_er["exponent"].values, n_perm=20000, seed=0)
 
@@ -578,7 +578,7 @@ if __name__ == "__main__":
     )
 
     # =========================
-    # Build pair table + EI_ratio
+    # 构建配对表并加入兴奋/抑制比。 / Build pair table + EI_ratio
     # =========================
     rows = []
     missing_summary = 0
@@ -620,7 +620,7 @@ if __name__ == "__main__":
         print(f"[Warn] missing summary folders in {summary_root}: {missing_summary} trials")
 
     # =========================
-    # Font lock: Times New Roman
+    # 固定字体为Times New Roman。 / Font lock: Times New Roman
     # =========================
     font_path = os.environ.get("MANUSCRIPT_FONT_FILE", "")
     if font_path and os.path.isfile(font_path):
@@ -645,7 +645,7 @@ if __name__ == "__main__":
     colors = nature_palette()
 
     # =========================
-    # Figure2: paired exponent
+    # 图2：配对非周期指数。 / Figure2: paired exponent
     # =========================
     fig2, ax2 = plt.subplots(figsize=(3.0, 3.0), dpi=600)
     plot_paired_panel(
@@ -668,7 +668,7 @@ if __name__ == "__main__":
     print(f"[Saved] {fig2_pdf}")
 
     # =========================
-    # Figure3: Δexponent vs I level
+    # 图3：指数差与抑制水平的关系。 / Figure3: Δexponent vs I level
     # =========================
     fig3, ax3 = plt.subplots(figsize=(3.0, 3.0), dpi=600)
     fig3.subplots_adjust(right=0.78)
@@ -693,7 +693,7 @@ if __name__ == "__main__":
     print(f"[Saved] {fig3_pdf}")
 
     # =========================
-    # Save Fig3 OLS fit info (NEW, with inference)
+    # 保存图3的OLS拟合信息，新增统计推断结果。 / Save Fig3 OLS fit info (NEW, with inference)
     # =========================
     fit_csv = os.path.join(out_dir, "fig3_ols_fit_params.csv")
     pd.DataFrame([{

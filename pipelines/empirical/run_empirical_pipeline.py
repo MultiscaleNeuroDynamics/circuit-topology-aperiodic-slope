@@ -1,4 +1,4 @@
-"""Run the public ds003380 propofol validation pipeline.
+"""运行公开ds003380丙泊酚验证流程。不重新分发OpenNeuro数据；设置PIG_DATA_ROOT或通过--data-root指定本地ds003380下载目录。 / Run the public ds003380 propofol validation pipeline.
 
 The OpenNeuro data are not redistributed. Set ``PIG_DATA_ROOT`` or pass
 ``--data-root`` to the local ds003380 download.

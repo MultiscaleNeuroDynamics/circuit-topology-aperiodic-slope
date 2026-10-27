@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Run matched-channel, animal-level propofol effect analyses.
+"""运行匹配通道、动物层面的丙泊酚效应分析。对预先指定的状态协变量进行残差化而不纳入区域变量，通过子抽样平衡皮层和丘脑通道数，并用动物层面的精确符号翻转推断检验区域差异。 / Run matched-channel, animal-level propofol effect analyses.
 
 The analysis residualizes prespecified state covariates without including
 region, balances cortical and thalamic channel counts by subsampling, and uses
@@ -12,7 +12,7 @@ import json
 import os
 import gc
 
-# Reduce native-library instability on Windows / old conda stacks.
+# 降低Windows或旧版conda环境中原生库的不稳定性。 / Reduce native-library instability on Windows / old conda stacks.
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
@@ -21,7 +21,7 @@ os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 import numpy as np
 import pandas as pd
 
-# Use non-interactive backend before importing pyplot.
+# 导入pyplot前使用非交互式后端。 / Use non-interactive backend before importing pyplot.
 import matplotlib
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ from scipy.stats import ttest_rel
 
 
 # ============================================================
-# Paths and configuration.
+# 路径与配置。 / Paths and configuration.
 # ============================================================
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -67,25 +67,25 @@ CHANNEL_COL_CANDIDATES = [
     "edf_channel", "channel_name", "chan_name", "electrode", "electrode_id",
 ]
 
-# Matched-channel subsampling controls the different numbers of cortical and thalamic channels
-# without putting channel count into the residualization model. For each animal/state/draw,
-# the same number of cortex and thalamus channels is sampled, using k = min(n_ctx, n_thal).
+# 通过匹配通道数的子抽样控制皮层与丘脑通道数的差异， / Matched-channel subsampling controls the different numbers of cortical and thalamic channels
+# 不在残差化模型中加入通道数。对每只动物、每种状态和每次抽样， / without putting channel count into the residualization model. For each animal/state/draw,
+# 从皮层和丘脑各抽取k个通道，其中k取两区域通道数的最小值。 / the same number of cortex and thalamus channels is sampled, using k = min(n_ctx, n_thal).
 MATCHED_CHANNEL_SUBSAMPLING = True
 
-# Fast deterministic matched-channel inference.
-# The animal-level draw-averaged value under uniform matched-channel subsampling is
-# mathematically equal to the equal-channel mean within each region. This avoids
-# materializing 5000 draw × animal tables for every model, which can crash old
-# Windows/conda stacks with exit code 0xC0000005.
+# 快速、确定性的匹配通道推断。 / Fast deterministic matched-channel inference.
+# 在均匀匹配通道子抽样下，动物层面的抽样平均值 / The animal-level draw-averaged value under uniform matched-channel subsampling is
+# 在数学上等于各区域内的等权通道均值，从而避免 / mathematically equal to the equal-channel mean within each region. This avoids
+# 为每个模型显式生成5000次抽样乘以动物数的表，防止旧版 / materializing 5000 draw × animal tables for every model, which can crash old
+# Windows/conda环境出现退出码0xC0000005的崩溃。 / Windows/conda stacks with exit code 0xC0000005.
 FAST_DRAW_AVERAGED_MATCHING = True
 
-# Only used if FAST_DRAW_AVERAGED_MATCHING = False.
+# 仅在FAST_DRAW_AVERAGED_MATCHING为False时使用。 / Only used if FAST_DRAW_AVERAGED_MATCHING = False.
 N_MATCHED_CHANNEL_DRAWS = 5000
 MATCHED_CHANNEL_RANDOM_SEED = 20260630
 MIN_MATCHED_CHANNELS_PER_REGION = 1
 
-# Plotting many model-level figures can also trigger native backend crashes.
-# Main CSV outputs are unaffected. Keep only the main-model plots by default.
+# 绘制大量模型图也可能触发原生后端崩溃。 / Plotting many model-level figures can also trigger native backend crashes.
+# 主要CSV输出不受影响；默认仅保留主模型图。 / Main CSV outputs are unaffected. Keep only the main-model plots by default.
 SAVE_PER_MODEL_DIAGNOSTIC_PLOTS = False
 SAVE_MAIN_MODEL_DIAGNOSTIC_PLOTS = True
 
@@ -95,7 +95,7 @@ SAVE_MAIN_MODEL_DIAGNOSTIC_PLOTS = True
 # ============================================================
 
 def exact_signflip_test(diffs):
-    """
+    """精确双侧符号翻转置换。零假设：动物层面的配对差在符号翻转下可交换。输入为每只动物的丘脑残差减皮层残差；返回观测平均差、精确双侧p值和动物数。 / 
     Exact two-sided sign-flip permutation.
 
     Null:
@@ -170,7 +170,7 @@ def prepare_numeric_covariates(df, covariates):
 
 
 def first_existing_column(df, candidates):
-    """Return the first existing column from a candidate list."""
+    """返回候选列表中第一个存在的列。 / Return the first existing column from a candidate list."""
     for c in candidates:
         if c in df.columns:
             return c
@@ -178,7 +178,7 @@ def first_existing_column(df, candidates):
 
 
 def infer_signal_amplitude_columns(df):
-    """Infer columns that can indicate whether a waveform/channel is effectively present.
+    """推断可反映波形或通道是否实际存在的列。排除delta_*列，因为负变化是生理变化而非低信号；也排除相对频带功率列，因为这些列属于成分变量。 / Infer columns that can indicate whether a waveform/channel is effectively present.
 
     We avoid delta_* columns because a negative delta is a physiological change, not low signal.
     We also avoid relative band power columns because they are compositional variables.
@@ -207,7 +207,7 @@ def infer_signal_amplitude_columns(df):
 
 
 def infer_fooof_r2_columns(df):
-    """Infer FOOOF / aperiodic fit R² columns, excluding Ising/model R²."""
+    """识别FOOOF或非周期拟合R²列，排除Ising或模型R²。 / Infer FOOOF / aperiodic fit R² columns, excluding Ising/model R²."""
     cols = []
     for c in df.columns:
         lc = c.lower()
@@ -231,7 +231,7 @@ def infer_fooof_r2_columns(df):
 
 
 def add_channel_and_qc_covariates(df, out_dir):
-    """Apply low-signal channel QC and attach channel-count / fit-R² covariates.
+    """执行低信号通道质控并附加通道数及拟合R²协变量。兼容上游step2中RMS、总功率、PSD中位数、通道及FOOOF R²的不同列名。 / Apply low-signal channel QC and attach channel-count / fit-R² covariates.
 
     The function is intentionally column-name tolerant, because upstream step2 files may use
     slightly different names for RMS, total power, PSD median, channel, and FOOOF R².
@@ -243,7 +243,7 @@ def add_channel_and_qc_covariates(df, out_dir):
     if channel_col is not None:
         use["qc_channel"] = use[channel_col].astype(str)
     else:
-        # This keeps the code runnable, but channel-count control becomes unavailable.
+        # 使代码仍可运行，但无法实施通道数控制。 / This keeps the code runnable, but channel-count control becomes unavailable.
         use["qc_channel"] = "unknown_channel"
         print("[QC WARN] No channel column found. Channel-count control will be uninformative.")
 
@@ -263,13 +263,13 @@ def add_channel_and_qc_covariates(df, out_dir):
     }
 
     # --------------------------------------------------------
-    # 1) FOOOF R² as row-level fit-quality covariate
+    # 1）以FOOOF R²作为逐行拟合质量协变量。 / 1) FOOOF R² as row-level fit-quality covariate
     # --------------------------------------------------------
     if r2_cols:
         r2_mat = []
         for c in r2_cols:
             x = pd.to_numeric(use[c], errors="coerce").astype(float)
-            # Some pipelines save R² as percent. Convert if needed.
+            # 部分流程将R²保存为百分数，必要时转换。 / Some pipelines save R² as percent. Convert if needed.
             finite = np.isfinite(x)
             if finite.sum() and np.nanmedian(x[finite]) > 1.5:
                 x = x / 100.0
@@ -281,17 +281,17 @@ def add_channel_and_qc_covariates(df, out_dir):
         print("[QC WARN] No FOOOF/aperiodic R² column found. R² control will be skipped.")
 
     # --------------------------------------------------------
-    # 2) Low-signal / almost-flat waveform QC
-    #    Unit-free strategy: convert each available amplitude/power variable into
-    #    a region-wise percentile rank, then use the median percentile score.
+    # 2）低信号或近乎平坦波形的质量控制。 / 2) Low-signal / almost-flat waveform QC
+    # 无量纲策略：将每个可用振幅或功率变量转换为 / Unit-free strategy: convert each available amplitude/power variable into
+    # 区域内百分位秩，再取百分位得分中位数。 / a region-wise percentile rank, then use the median percentile score.
     # --------------------------------------------------------
     if signal_cols:
         rank_cols = []
         for c in signal_cols:
             x = pd.to_numeric(use[c], errors="coerce").astype(float)
-            # If the column is RMS/total_power in linear units, rank still works.
+            # 若列为线性单位的RMS或总功率，秩方法仍适用。 / If the column is RMS/total_power in linear units, rank still works.
             tmp = pd.DataFrame({"region": use["region"].astype(str).values, "x": x.values})
-            # pct=True gives 0-1 percentile rank within each region.
+            # pct=True给出各区域内0至1的百分位秩。 / pct=True gives 0-1 percentile rank within each region.
             r = tmp.groupby("region")["x"].rank(method="average", pct=True)
             rc = f"qc_rank__{c}"
             use[rc] = r.values
@@ -306,7 +306,7 @@ def add_channel_and_qc_covariates(df, out_dir):
         use["qc_signal_row_pass"] = True
         print("[QC WARN] No amplitude/power/PSD-median column found. Low-signal channel QC cannot be applied.")
 
-    # Channel-level pass fraction. This targets stable bad channels, not isolated epochs.
+    # 通道层面的通过比例，针对持续不良通道而非孤立时间段。 / Channel-level pass fraction. This targets stable bad channels, not isolated epochs.
     channel_group_cols = ["animal_id", "subject", "group", "state_label", "region", "qc_channel"]
     use["qc_channel_signal_pass_fraction"] = (
         use.groupby(channel_group_cols)["qc_signal_row_pass"]
@@ -315,7 +315,7 @@ def add_channel_and_qc_covariates(df, out_dir):
     )
     use["qc_channel_signal_ok"] = use["qc_channel_signal_pass_fraction"] >= MIN_CHANNEL_SIGNAL_PASS_FRACTION
 
-    # Hard R² QC can be disabled if it removes too many data points.
+    # 若硬性R²筛选删除过多数据点，可将其禁用。 / Hard R² QC can be disabled if it removes too many data points.
     if APPLY_FOOOF_R2_HARD_QC and r2_cols:
         use["qc_fooof_r2_ok"] = np.isfinite(use["fit_r2_for_control"]) & (use["fit_r2_for_control"] >= MIN_FOOOF_R2)
     else:
@@ -373,7 +373,7 @@ def add_channel_and_qc_covariates(df, out_dir):
     print(qc_counts.to_string(index=False))
 
     # --------------------------------------------------------
-    # 3) Attach technical covariates to the retained rows.
+    # 3）向保留的行附加技术协变量。 / 3) Attach technical covariates to the retained rows.
     # --------------------------------------------------------
     region_group_cols = ["animal_id", "subject", "group", "state_label", "region"]
     use["valid_channel_count_in_region"] = (
@@ -395,11 +395,11 @@ def build_design_matrix(df, numeric_covariates=None, categorical_covariates=None
     X_parts = []
     names = []
 
-    # intercept
+    # 截距。 / intercept
     X_parts.append(np.ones((len(df), 1), dtype=float))
     names.append("Intercept")
 
-    # numeric
+    # 数值变量。 / numeric
     for c in numeric_covariates:
         x = pd.to_numeric(df[c], errors="coerce").values.astype(float)
         med = np.nanmedian(x)
@@ -408,7 +408,7 @@ def build_design_matrix(df, numeric_covariates=None, categorical_covariates=None
         X_parts.append(z.reshape(-1, 1))
         names.append("z_" + c)
 
-    # categorical dummies
+    # 分类虚拟变量。 / categorical dummies
     for c in categorical_covariates:
         if c not in df.columns:
             continue
@@ -442,7 +442,7 @@ def residualize(df, y_col, numeric_covariates, categorical_covariates, model_nam
 
     y = use[y_col].values.astype(float)
 
-    # pseudo-inverse handles collinearity
+    # 使用伪逆处理共线性。 / pseudo-inverse handles collinearity
     beta = np.linalg.pinv(X) @ y
     yhat = X @ beta
     resid = y - yhat
@@ -472,7 +472,7 @@ def aggregate_animal_region(resid_df, value_col="residual"):
 
     group_cols = ["animal_id", "subject", "group", "state_label", "region"]
 
-    # Input validation.
+    # 输入验证。 / Input validation.
     missing_group_cols = [c for c in group_cols if c not in resid_df.columns]
     if missing_group_cols:
         raise RuntimeError(f"aggregate_animal_region missing grouping columns: {missing_group_cols}")
@@ -486,7 +486,7 @@ def aggregate_animal_region(resid_df, value_col="residual"):
         "residual_sd": (value_col, "std"),
     }
 
-    # QC / technical summaries for checking and optional second-level interpretation.
+    # 质量控制和技术汇总，供检查及可选的二级解释使用。 / QC / technical summaries for checking and optional second-level interpretation.
     if "qc_channel" in resid_df.columns:
         agg_dict["n_valid_channels"] = ("qc_channel", "nunique")
     if "fit_r2_for_control" in resid_df.columns:
@@ -528,7 +528,7 @@ def aggregate_animal_region(resid_df, value_col="residual"):
         .reset_index()
     )
 
-    # Input validation.
+    # 输入验证。 / Input validation.
     missing_after = [c for c in group_cols if c not in summary.columns]
     if missing_after:
         raise RuntimeError(
@@ -564,7 +564,7 @@ def animal_level_paired_test(summary, model_name, analysis_name, out_dir):
         wide["analysis"] = analysis_name
         wide["state"] = state
 
-        # exact sign-flip
+        # 精确符号翻转。 / exact sign-flip
         obs, p_perm, n = exact_signflip_test(wide["thalamus_minus_cortex_residual"].values)
 
         if len(wide) >= 2:
@@ -608,7 +608,7 @@ def animal_level_paired_test(summary, model_name, analysis_name, out_dir):
 
 
 def plot_residual_paired(summary, model_name, analysis_name, out_dir):
-    """
+    """配对残差图，每个状态保存一个文件。 / 
     Paired residual plot, one file per state.
     """
     for state in STATE_ORDER:
@@ -648,7 +648,7 @@ def plot_residual_paired(summary, model_name, analysis_name, out_dir):
 
 
 def plot_residual_diff_bar(all_diffs, out_dir):
-    """
+    """动物层面残差差值的汇总图。 / 
     Summary plot of animal-level residual differences.
     """
     if all_diffs.empty:
@@ -681,7 +681,7 @@ def plot_residual_diff_bar(all_diffs, out_dir):
         labels.append(f"{analysis}\n{state}")
         means.append(np.mean(vals))
 
-        # animal points
+        # 动物数据点。 / animal points
         jitter = np.linspace(-0.08, 0.08, len(vals)) if len(vals) > 1 else np.array([0.0])
         ax.scatter(np.full(len(vals), x) + jitter, vals, s=34, alpha=0.8)
         ax.plot([x - 0.18, x + 0.18], [np.mean(vals), np.mean(vals)], color="0.1", lw=2)
@@ -702,7 +702,7 @@ def plot_residual_diff_bar(all_diffs, out_dir):
 
 
 def _stable_seed(*parts, base_seed=MATCHED_CHANNEL_RANDOM_SEED):
-    """Deterministic seed from strings without relying on Python's randomized hash."""
+    """从字符串生成确定性种子，不依赖Python的随机化哈希。 / Deterministic seed from strings without relying on Python's randomized hash."""
     s = "|".join(str(p) for p in parts)
     val = base_seed
     for ch in s:
@@ -711,7 +711,7 @@ def _stable_seed(*parts, base_seed=MATCHED_CHANNEL_RANDOM_SEED):
 
 
 def channel_level_summary_for_matching(resid_df, value_col="residual"):
-    """Collapse epoch rows to channel means before channel matching.
+    """通道匹配前将时间段行汇总为通道均值，使所选通道等权贡献，避免保留时间段较多的通道主导区域均值。 / Collapse epoch rows to channel means before channel matching.
 
     This makes each selected channel contribute equally, instead of letting channels with
     more retained epochs dominate the regional mean.
@@ -741,7 +741,7 @@ def channel_level_summary_for_matching(resid_df, value_col="residual"):
 
 
 def _one_matched_channel_draw(channel_df, state, rng):
-    """One random matched-channel draw for one state.
+    """对一个状态执行一次随机匹配通道抽样。每只动物从皮层和丘脑各抽k个通道，k取两区域通道数的最小值；每只动物返回一行配对结果。 / One random matched-channel draw for one state.
 
     For each animal, sample k channels from cortex and k channels from thalamus,
     where k = min(n_cortex, n_thalamus). Return one paired row per animal.
@@ -797,7 +797,7 @@ def _one_matched_channel_draw(channel_df, state, rng):
 
 
 def _paired_rows_from_equal_channel_means(channel_df, state):
-    """Exact draw-averaged matched-channel paired rows for one state.
+    """计算一个状态的精确抽样平均匹配通道配对行。固定动物和状态后，每区域无放回均匀抽取k个通道，所选通道均值的期望等于区域全部通道的均值，因此无需模拟抽样即可精确计算动物差值的抽样均值。 / Exact draw-averaged matched-channel paired rows for one state.
 
     For a fixed animal/state, each draw samples k=min(n_ctx,n_thal) channels per region.
     Under uniform sampling without replacement, the expected selected-channel mean equals
@@ -874,8 +874,8 @@ def _make_main_test_row_from_drawavg(drawavg, model_name, analysis_name, state):
         "median_n_cortex_channels_available": float(st["n_cortex_channels_available"].median()),
         "median_n_thalamus_channels_available": float(st["n_thalamus_channels_available"].median()),
 
-        # In fast mode these describe the exact draw-averaged matched-channel effect,
-        # rather than a Monte-Carlo distribution over random draws.
+        # 快速模式下，这些结果描述精确的抽样平均匹配通道效应， / In fast mode these describe the exact draw-averaged matched-channel effect,
+        # 而不是随机抽样的蒙特卡洛分布。 / rather than a Monte-Carlo distribution over random draws.
         "draw_effect_mean": float(st["thalamus_minus_cortex_residual"].mean()),
         "draw_effect_median": float(st["thalamus_minus_cortex_residual"].mean()),
         "draw_effect_ci2p5": np.nan,
@@ -889,7 +889,7 @@ def _make_main_test_row_from_drawavg(drawavg, model_name, analysis_name, state):
 
 
 def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_dir):
-    """Matched-channel inference with memory-safe exact draw-averaged computation.
+    """通过节省内存的精确抽样平均计算实施匹配通道推断。旧实现为每个模型显式生成所有抽样与动物的组合行，可能导致旧版Windows/conda原生内存崩溃。主要检验仅需动物差值的抽样均值，可由通道等权均值精确得到；保留绘图脚本所用的主要输出文件名和列。 / Matched-channel inference with memory-safe exact draw-averaged computation.
 
     The previous implementation materialized every draw × animal row for every model.
     On old Windows/conda environments this can trigger native memory crashes. The main
@@ -908,7 +908,7 @@ def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_di
     )
 
     # --------------------------------------------------------
-    # Fast exact draw-averaged main inference
+    # 快速、精确的抽样平均主要推断。 / Fast exact draw-averaged main inference
     # --------------------------------------------------------
     if FAST_DRAW_AVERAGED_MATCHING:
         drawavg_parts = []
@@ -920,7 +920,7 @@ def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_di
             st["analysis"] = analysis_name
             drawavg_parts.append(st)
 
-            # Representative draw table: in exact mode this is the draw-averaged table.
+            # 代表性抽样表：精确模式下为抽样平均表。 / Representative draw table: in exact mode this is the draw-averaged table.
             st.to_csv(
                 out_dir / f"matched_channel_representative_draw_diff_table_{model_name}_{analysis_name}_{state}.csv",
                 index=False,
@@ -937,7 +937,7 @@ def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_di
                     main_rows.append(row)
 
         main_tests = pd.DataFrame(main_rows)
-        draw_tests = pd.DataFrame()  # intentionally not materialized in fast mode
+        draw_tests = pd.DataFrame()  # 快速模式下有意不显式生成。 / intentionally not materialized in fast mode
 
         if not main_tests.empty:
             main_tests.to_csv(
@@ -955,7 +955,7 @@ def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_di
         return main_tests, drawavg_diffs, draw_tests
 
     # --------------------------------------------------------
-    # Original Monte-Carlo fallback: kept for optional diagnostics only.
+    # 原蒙特卡洛备用方法，仅保留用于可选诊断。 / Original Monte-Carlo fallback: kept for optional diagnostics only.
     # --------------------------------------------------------
     rng = np.random.default_rng(_stable_seed(model_name, analysis_name))
 
@@ -1060,7 +1060,7 @@ def matched_channel_subsampling_test(resid_df, model_name, analysis_name, out_di
     return main_tests, drawavg_diffs, draw_tests
 
 def plot_matched_channel_draw_effects(matched_draw_tests, out_dir):
-    """Quick diagnostic plot for draw-level matched-channel effects of the main model."""
+    """主模型逐次匹配通道效应的快速诊断图。 / Quick diagnostic plot for draw-level matched-channel effects of the main model."""
     if matched_draw_tests.empty:
         return
 
@@ -1094,7 +1094,7 @@ def plot_matched_channel_draw_effects(matched_draw_tests, out_dir):
 
 
 # ============================================================
-# Load input data.
+# 加载输入数据。 / Load input data.
 # ============================================================
 
 print("=" * 120)
@@ -1146,7 +1146,7 @@ df = add_channel_and_qc_covariates(df, OUT_DIR)
 print(f"[PROP ROWS AFTER QC] {len(df)}")
 print(df.groupby(["state_label", "region"])["delta_exponent_vs_fentanyl"].agg(["count", "mean", "std"]).to_string())
 
-# Check whether the updated step2 Ising full-state signal QC is present.
+# 检查是否包含更新后的step2 Ising全状态信号质量控制。 / Check whether the updated step2 Ising full-state signal QC is present.
 if "ising_signal_ok" in df.columns:
     print("\n[CHECK] Ising full-state signal QC pass rate after base QC:")
     print(df.groupby(["state_label", "region"])["ising_signal_ok"].mean().to_string())
@@ -1190,10 +1190,10 @@ ising_distance_covs = [
     "delta_ising_dist_crit_vs_fentanyl",
 ]
 
-# FOOOF R² is primarily handled by hard QC above.
-# It is included only in a sensitivity model, not in the main model, because R² can be partly
-# downstream of region/state-related spectral changes. Channel count is NOT used as a covariate;
-# it is controlled by matched-channel subsampling below.
+# FOOOF R²主要通过上面的硬性质量筛选处理。 / FOOOF R² is primarily handled by hard QC above.
+# 仅将其加入敏感性模型而非主模型，因为R²可能部分 / It is included only in a sensitivity model, not in the main model, because R² can be partly
+# 受区域或状态相关的频谱变化影响。不将通道数作为协变量， / downstream of region/state-related spectral changes. Channel count is NOT used as a covariate;
+# 而通过下面的匹配通道子抽样控制。 / it is controlled by matched-channel subsampling below.
 fit_r2_sensitivity_covs = [
     "fit_r2_for_control",
 ]
@@ -1265,7 +1265,7 @@ CONTROL_MODELS = {
 
 
 # ============================================================
-# 4. Run residualization + animal-level exact sign-flip
+# 4. 运行残差化与动物层面的精确符号翻转检验。 / 4. Run residualization + animal-level exact sign-flip
 # ============================================================
 
 print("\n" + "=" * 120)
@@ -1287,14 +1287,14 @@ for model_name, spec in CONTROL_MODELS.items():
 
     use = df.copy()
 
-    # Ising-control models only use rows with valid adaptive-Ising controls.
-    # In the updated step2, ising_control_ok already includes:
-    #   full-state Ising signal QC + current/baseline ACF fit QC.
+    # Ising控制模型仅使用具有有效自适应Ising控制量的行。 / Ising-control models only use rows with valid adaptive-Ising controls.
+    # 更新后的step2中，ising_control_ok已包含 / In the updated step2, ising_control_ok already includes:
+    # 全状态Ising信号质控以及当前状态和基线的ACF拟合质控。 / full-state Ising signal QC + current/baseline ACF fit QC.
     if spec.get("ising_qc", False):
         if "ising_control_ok" in use.columns:
             use = use[use["ising_control_ok"].astype(bool)].copy()
 
-    # R0 raw: no residualization
+    # R0原始值：不进行残差化。 / R0 raw: no residualization
     if model_name == "R0_RAW_no_residualization":
         resid_df = use.copy()
         resid_df["residual"] = resid_df["delta_exponent_vs_fentanyl"].values
@@ -1346,7 +1346,7 @@ for model_name, spec in CONTROL_MODELS.items():
 
     all_summary_rows.append(summary)
 
-    # all animals
+    # 全部动物。 / all animals
     tests_all, diffs_all = animal_level_paired_test(
         summary,
         model_name=model_name,
@@ -1354,7 +1354,7 @@ for model_name, spec in CONTROL_MODELS.items():
         out_dir=OUT_DIR
     )
 
-    # sedation only
+    # 仅镇静状态。 / sedation only
     summary_sed = summary[summary["group"] == "sedation"].copy()
     tests_sed, diffs_sed = animal_level_paired_test(
         summary_sed,
@@ -1369,14 +1369,14 @@ for model_name, spec in CONTROL_MODELS.items():
     all_diff_rows.append(diffs_all)
     all_diff_rows.append(diffs_sed)
 
-    # Plotting many model-level figures can trigger native backend crashes in old Windows stacks.
-    # Keep only main-model diagnostics by default; CSV outputs are unaffected.
+    # 旧版Windows环境中，绘制大量模型图可能触发原生后端崩溃。 / Plotting many model-level figures can trigger native backend crashes in old Windows stacks.
+    # 默认只保留主模型诊断图，CSV输出不受影响。 / Keep only main-model diagnostics by default; CSV outputs are unaffected.
     if SAVE_PER_MODEL_DIAGNOSTIC_PLOTS or (SAVE_MAIN_MODEL_DIAGNOSTIC_PLOTS and model_name == MAIN_MODEL_NAME):
         plot_residual_paired(summary, model_name, "all_available_pre_ischemia", OUT_DIR)
         plot_residual_paired(summary_sed, model_name, "sedation_only", OUT_DIR)
         plt.close("all")
 
-    # Matched-channel subsampling: controls cortex/thalamus channel-count imbalance
+    # 匹配通道子抽样：控制皮层与丘脑的通道数不均衡。 / Matched-channel subsampling: controls cortex/thalamus channel-count imbalance
     matched_tests_all, matched_diffs_all, matched_draws_all = matched_channel_subsampling_test(
         resid_df,
         model_name=model_name,
@@ -1410,14 +1410,14 @@ for model_name, spec in CONTROL_MODELS.items():
         "ising_qc": spec.get("ising_qc", False),
     })
 
-    # Memory cleanup between models. This is useful on old Windows/conda stacks.
+    # 模型之间清理内存，适用于旧版Windows/conda环境。 / Memory cleanup between models. This is useful on old Windows/conda stacks.
     del use, resid_df, summary, summary_sed
     gc.collect()
     plt.close("all")
 
 
 # ============================================================
-# Save generated output.
+# 保存生成的输出。 / Save generated output.
 # ============================================================
 
 tests = pd.concat(all_test_rows, ignore_index=True) if all_test_rows else pd.DataFrame()
@@ -1494,7 +1494,7 @@ else:
 
 
 # ============================================================
-# Save generated output.
+# 保存生成的输出。 / Save generated output.
 # ============================================================
 
 run_summary = {

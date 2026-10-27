@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+"""混合组检验：兴奋/抑制比能否解释beta，控制该比值后拓扑是否仍有影响？构建REAL和ER共2N行的长表，采用按试次聚类的稳健标准误进行回归，并为每个模型项报告系数、标准误、t、p和95%置信区间。四个模型依次为beta ~ EI、beta ~ topology、beta ~ EI + topology、beta ~ EI * topology。置信区间与标准误、t、p使用相同的聚类稳健协方差矩阵；兴奋/抑制定义、模型公式和推断程序保持不变。 / 
 Mixed-group test: does EI explain beta, and does topology still matter after
 controlling EI?
 
@@ -25,7 +25,7 @@ import statsmodels.formula.api as smf
 
 
 # =========================================================
-# 1) Paths (row-aligned)
+# 1）路径，按行对齐。 / 1) Paths (row-aligned)
 # =========================================================
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", REPOSITORY_ROOT / "work")).resolve()
@@ -40,7 +40,7 @@ os.makedirs(out_dir, exist_ok=True)
 
 
 # =========================================================
-# 2) Load
+# 2）加载。 / 2) Load
 # =========================================================
 df_ei = pd.read_csv(ei_csv)
 df_exp = pd.read_csv(exp_csv)
@@ -57,8 +57,8 @@ miss = (
 if miss:
     raise RuntimeError(f"Missing columns: {miss}")
 
-# Use the original trial identifiers whenever available. Otherwise, preserve
-# the original row-wise REAL--ER pairing with an index-derived identifier.
+# 存在原始试次标识符时优先使用；否则 / Use the original trial identifiers whenever available. Otherwise, preserve
+# 用行索引生成标识符，保留原始逐行REAL与ER配对关系。 / the original row-wise REAL--ER pairing with an index-derived identifier.
 if "trial" in df_ei.columns:
     trial_ids = df_ei["trial"].astype(str).values
 elif "trial" in df_exp.columns:
@@ -70,7 +70,7 @@ else:
 
 
 # =========================================================
-# 3) Build long table (2N rows)
+# 3）构建含2N行的长表。 / 3) Build long table (2N rows)
 # =========================================================
 real_beta = pd.to_numeric(df_exp["REAL_exponent"], errors="coerce")
 er_beta = pd.to_numeric(df_exp["ER_exponent"], errors="coerce")
@@ -108,10 +108,10 @@ print(
 
 
 # =========================================================
-# 4) Fit models with trial-cluster robust SE and 95% CI
+# 4）拟合模型，使用按试次聚类的稳健标准误和95%置信区间。 / 4) Fit models with trial-cluster robust SE and 95% CI
 # =========================================================
 def fit_cluster_ols(formula, data, cluster_col="trial"):
-    """Fit OLS and return both conventional and cluster-robust results."""
+    """拟合OLS并返回常规结果和聚类稳健结果。 / Fit OLS and return both conventional and cluster-robust results."""
     model = smf.ols(formula=formula, data=data).fit()
     robust = model.get_robustcov_results(
         cov_type="cluster", groups=data[cluster_col]
@@ -120,7 +120,7 @@ def fit_cluster_ols(formula, data, cluster_col="trial"):
 
 
 def summarize_robust(robust, name, alpha=0.05):
-    """Return all terms with cluster-robust inference and matching 95% CIs."""
+    """返回所有模型项的聚类稳健推断结果及对应95%置信区间。 / Return all terms with cluster-robust inference and matching 95% CIs."""
     ci = np.asarray(robust.conf_int(alpha=alpha), dtype=float)
     out = pd.DataFrame(
         {
@@ -170,14 +170,14 @@ for name, formula in specs:
 coef_df = pd.concat(all_tabs, axis=0, ignore_index=True)
 fit_df = pd.DataFrame(fit_info)
 
-# Full-precision statistical output.
+# 全精度统计输出。 / Full-precision statistical output.
 coef_path = os.path.join(out_dir, "cluster_robust_coefficients_with_95CI.csv")
 fit_path = os.path.join(out_dir, "model_fit_metrics.csv")
 coef_df.to_csv(coef_path, index=False, encoding="utf-8-sig")
 fit_df.to_csv(fit_path, index=False, encoding="utf-8-sig")
 
-# Manuscript-ready output. It retains every coefficient, including intercepts,
-# so the reviewer request is met without selectively reporting terms.
+# 论文用输出保留全部系数，包括截距， / Manuscript-ready output. It retains every coefficient, including intercepts,
+# 以完整回应审稿要求，避免选择性报告模型项。 / so the reviewer request is met without selectively reporting terms.
 table1_df = coef_df.copy()
 table1_df["estimate_95CI"] = table1_df.apply(
     lambda row: (
@@ -198,7 +198,7 @@ print(f"[Saved] {table1_path}")
 
 
 # =========================================================
-# 5) Key comparisons, now including matching 95% CIs
+# 5）关键比较，同时报告对应的95%置信区间。 / 5) Key comparisons, now including matching 95% CIs
 # =========================================================
 def get_term_row(data, model_name, term_name):
     sub = data[(data["model"] == model_name) & (data["term"] == term_name)]

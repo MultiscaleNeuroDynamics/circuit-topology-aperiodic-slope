@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FOOOF and descriptive endpoint robustness analysis for five profiles + baseline."""
+"""针对五个参数配置和基线开展FOOOF及描述性端点稳健性分析。 / FOOOF and descriptive endpoint robustness analysis for five profiles + baseline."""
 
 from __future__ import annotations
 

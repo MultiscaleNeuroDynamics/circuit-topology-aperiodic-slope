@@ -1,7 +1,7 @@
 {
   "_comments": {
-    "synapse_parameters": "weight 单位 mS，tau 单位 ms，e 单位 mV。",
-    "passive_membrane": "Ra 单位 Ohm*cm；g_leak 单位 S/cm^2；erev_leak 为被动漏电反转电位。"
+    "synapse_parameters": "weight 单位 μS，tau 单位 ms，e 单位 mV。 / weight is in μS, tau in ms, and e in mV.",
+    "passive_membrane": "Ra 单位 Ohm*cm；g_leak 单位 S/cm^2；erev_leak 为被动漏电反转电位。 / Ra is in Ohm*cm; g_leak is in S/cm^2; erev_leak is the passive leak reversal potential."
   },
 
   "tmax": 12000,
